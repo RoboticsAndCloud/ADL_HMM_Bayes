@@ -1,0 +1,121 @@
+
+source ~/LF_Workspace/venv3.8_rl_pytorch/bin/activate
+cd /home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model
+python rl_adl_main_privacy.py > test.0322.txt
+
+
+
+python rl_adl_dqn_main_test_privacy.py >> test.0325_p_0.6_2layer_test2.txt 
+
+
+
+single layer
+
+total_wmu_cam_trigger_times: [5538, 3896, 2600, 1809, 1265, 800, 509, 378, 234, 142, 104, 69]
+total_wmu_mic_trigger_times: [3795, 2569, 1752, 1215, 807, 534, 349, 261, 149, 98, 77, 46]
+total_wmu_trigger_times: [1915, 1319, 865, 613, 428, 273, 174, 138, 65, 40, 43, 24]
+total_robot_mic_trigger_times: [5945, 6375, 4769, 2572, 2538, 1205, 734, 549, 442, 339, 294, 263]
+total_robot_cam_trigger_times: [3724, 4624, 3741, 1831, 1808, 715, 522, 418, 358, 283, 270, 230]
+total_robot_trigger_times: [1876, 3299, 2831, 1217, 1382, 438, 351, 295, 276, 238, 230, 210]
+total_privacy_level1_times: [1572, 1303, 593, 449, 319, 184, 142, 98, 59, 45, 40, 25]
+total_privacy_level2_times: [10015, 8965, 6837, 3951, 3451, 1831, 1111, 834, 613, 436, 370, 303]
+total_privacy_level1_robot_vision_times: [444, 328, 206, 151, 115, 64, 38, 26, 17, 14, 6, 6]
+total_privacy_level1_robot_sound_times: [884, 872, 307, 218, 167, 109, 74, 54, 33, 30, 23, 17]
+total_privacy_level1_wmu_sound_times: [465, 286, 181, 151, 91, 49, 45, 32, 17, 8, 14, 6]
+total_privacy_level2_robot_vision_times: [3280, 4296, 3535, 1680, 1693, 651, 484, 392, 341, 269, 264, 224]
+total_privacy_level2_robot_sound_times: [5061, 5503, 4462, 2354, 2371, 1096, 660, 495, 409, 309, 271, 246]
+total_privacy_level2_wmu_sound_times: [3329, 2282, 1570, 1063, 715, 484, 303, 228, 131, 89, 62, 39]
+
+
+
+episode: 0/11, episode_reward: -9984.416187333294, e: 0.68, end time 2009-12-11 22:51:44.300000
+episode: 1/11, episode_reward: -6908.574536666471, e: 0.46, end time 2009-12-11 22:51:44.200000
+episode: 2/11, episode_reward: -4323.825775333323, e: 0.31, end time 2009-12-11 22:51:46
+episode: 3/11, episode_reward: -2405.3842926667003, e: 0.21, end time 2009-12-11 22:51:44.900000
+episode: 4/11, episode_reward: -1727.8020000000017, e: 0.14, end time 2009-12-11 22:51:44
+episode: 5/11, episode_reward: -846.2060000000048, e: 0.09, end time 2009-12-11 22:51:44.700000
+episode: 6/11, episode_reward: -468.6699999999977, e: 0.06, end time 2009-12-11 22:51:46
+episode: 7/11, episode_reward: -299.6459999999993, e: 0.039, end time 2009-12-11 22:51:45.400000
+episode: 8/11, episode_reward: -117.69200000000096, e: 0.026, end time 2009-12-11 22:51:46.100000
+episode: 9/11, episode_reward: -13.655999999999867, e: 0.017, end time 2009-12-11 22:51:45.700000
+episode: 10/11, episode_reward: 31.400000000000063, e: 0.011, end time 2009-12-11 22:51:45.400000
+episode: 11/11, episode_reward: 81.15999999999994, e: 0.0074, end time 2009-12-11 22:51:44.300000
+
+#################################################################################################################################################
+#################################################################################################################################################33
+
+two layers dqn:
+w_accuracy = 0.05
+w_energy = 0.35
+w_privacy = 0.6 # increase the weight of privacy
+
+
+episode: 0/11, episode_reward: -10868.976614666833, e: 0.68, end time 2009-12-11 22:51:46.200000
+episode: 1/11, episode_reward: -7451.562174666708, e: 0.46, end time 2009-12-11 22:51:44.600000
+episode: 2/11, episode_reward: -4828.267618000034, e: 0.31, end time 2009-12-11 22:51:45.500000
+episode: 3/11, episode_reward: -3054.396292666661, e: 0.21, end time 2009-12-11 22:51:46
+episode: 4/11, episode_reward: -1499.0468833333443, e: 0.14, end time 2009-12-11 22:51:44.600000
+episode: 5/11, episode_reward: -868.574000000002, e: 0.09, end time 2009-12-11 22:51:44.500000
+episode: 6/11, episode_reward: -518.9059999999994, e: 0.06, end time 2009-12-11 22:51:44.400000
+episode: 7/11, episode_reward: -302.04999999999916, e: 0.039, end time 2009-12-11 22:51:44.300000
+episode: 8/11, episode_reward: -119.94200000000036, e: 0.026, end time 2009-12-11 22:51:44.900000
+episode: 9/11, episode_reward: 4.980000000000037, e: 0.017, end time 2009-12-11 22:51:45.600000
+episode: 10/11, episode_reward: 44.63000000000001, e: 0.011, end time 2009-12-11 22:51:45.900000
+episode: 11/11, episode_reward: 98.73599999999996, e: 0.0074, end time 2009-12-11 22:51:45.600000
+episode: 0/11, episode_reward: 102.7499999999999, e: 0.0062, end time 2009-12-11 22:51:46
+episode: 1/11, episode_reward: 122.10399999999993, e: 0.0055, end time 2009-12-11 22:51:45.700000
+episode: 2/11, episode_reward: 125.40199999999997, e: 0.0049, end time 2009-12-11 22:51:46
+episode: 3/11, episode_reward: 136.1299999999999, e: 0.0044, end time 2009-12-11 22:51:45.200000
+episode: 4/11, episode_reward: 139.0460000000001, e: 0.0039, end time 2009-12-11 22:51:45.300000
+episode: 5/11, episode_reward: 138.54399999999995, e: 0.0035, end time 2009-12-11 22:51:44.300000
+episode: 6/11, episode_reward: 149.62999999999997, e: 0.0031, end time 2009-12-11 22:51:44.200000
+episode: 7/11, episode_reward: 149.87000000000023, e: 0.0027, end time 2009-12-11 22:51:46.100000
+episode: 8/11, episode_reward: 157.6159999999997, e: 0.0024, end time 2009-12-11 22:51:44.100000
+episode: 9/11, episode_reward: 155.42199999999977, e: 0.0022, end time 2009-12-11 22:51:44.800000
+episode: 10/11, episode_reward: 156.66799999999972, e: 0.0019, end time 2009-12-11 22:51:45.100000
+episode: 11/11, episode_reward: 158.56999999999974, e: 0.0017, end time 2009-12-11 22:51:46.100000
+
+
+total_wmu_cam_trigger_times: [6209, 4408, 3331, 2541, 1704, 1148, 890, 624, 505, 404, 391, 346]
+total_wmu_mic_trigger_times: [3767, 2528, 1786, 1177, 803, 543, 375, 253, 157, 91, 66, 45]
+total_wmu_trigger_times: [1936, 1270, 939, 594, 398, 273, 188, 130, 80, 41, 33, 26]
+total_robot_mic_trigger_times: [6675, 6641, 4512, 3235, 1607, 1086, 787, 536, 405, 324, 286, 249]
+total_robot_cam_trigger_times: [3801, 4690, 3368, 2279, 854, 591, 317, 324, 179, 112, 76, 38]
+total_robot_trigger_times: [1888, 3307, 2430, 1562, 414, 350, 160, 114, 83, 55, 33, 18]
+total_privacy_level1_times: [1433, 1285, 622, 434, 313, 191, 144, 93, 55, 40, 26, 20]
+total_privacy_level2_times: [10921, 9266, 6613, 4694, 2536, 1678, 1174, 905, 602, 431, 368, 293]
+total_privacy_level1_robot_vision_times: [460, 336, 200, 160, 103, 67, 41, 28, 21, 8, 11, 4]
+total_privacy_level1_robot_sound_times: [775, 834, 292, 213, 162, 92, 74, 48, 27, 23, 16, 11]
+total_privacy_level1_wmu_sound_times: [435, 300, 211, 149, 102, 62, 53, 33, 18, 14, 5, 8]
+total_privacy_level2_robot_vision_times: [3341, 4354, 3168, 2119, 751, 524, 276, 296, 158, 104, 65, 34]
+total_privacy_level2_robot_sound_times: [5900, 5807, 4220, 3022, 1445, 994, 713, 488, 378, 301, 270, 238]
+total_privacy_level2_wmu_sound_times: [3331, 2227, 1574, 1027, 700, 480, 321, 219, 138, 76, 60, 36]
+
+total_wmu_cam_trigger_times: [335, 332, 334, 332, 318, 318, 305, 306, 304, 307, 303, 304]
+total_wmu_mic_trigger_times: [27, 29, 27, 17, 24, 23, 16, 11, 9, 12, 10, 11]
+total_wmu_trigger_times: [19, 18, 17, 8, 12, 13, 8, 6, 5, 8, 5, 6]
+total_robot_mic_trigger_times: [228, 219, 213, 210, 192, 193, 181, 246, 179, 188, 184, 179]
+total_robot_cam_trigger_times: [39, 30, 25, 19, 19, 19, 13, 13, 14, 9, 11, 8]
+total_robot_trigger_times: [21, 16, 16, 9, 9, 8, 6, 4, 5, 4, 6, 3]
+total_privacy_level1_times: [12, 14, 8, 8, 5, 11, 5, 3, 2, 5, 5, 4]
+total_privacy_level2_times: [260, 247, 240, 228, 220, 215, 198, 262, 194, 199, 193, 190]
+total_privacy_level1_robot_vision_times: [6, 3, 4, 4, 1, 2, 2, 0, 1, 0, 1, 1]
+total_privacy_level1_robot_sound_times: [9, 7, 5, 3, 2, 3, 2, 2, 1, 3, 4, 3]
+total_privacy_level1_wmu_sound_times: [1, 5, 2, 1, 2, 6, 2, 1, 0, 2, 0, 0]
+total_privacy_level2_robot_vision_times: [33, 27, 21, 15, 18, 17, 11, 13, 13, 9, 10, 7]
+total_privacy_level2_robot_sound_times: [219, 212, 208, 207, 190, 190, 179, 244, 178, 185, 180, 176]
+total_privacy_level2_wmu_sound_times: [25, 23, 24, 15, 21, 16, 13, 9, 8, 9, 9, 10]
+
+
+
+
+Activity detection ratio: 0.75
+Master_Bathroom 2009-12-11 09:12:05     2009-12-11 09:13:11     1.1
+Leave_Home      2009-12-11 10:53:06     2009-12-11 10:53:19     0.21666666666666667
+Master_Bedroom_Activity 2009-12-11 13:22:28     2009-12-11 13:31:55     9.45
+Master_Bathroom 2009-12-11 13:22:37     2009-12-11 13:31:43     9.1
+Master_Bedroom_Activity 2009-12-11 13:56:52     2009-12-11 13:57:10     0.3
+Kitchen_Activity        2009-12-11 13:57:17     2009-12-11 13:57:42     0.4166666666666667
+Desk_Activity   2009-12-11 14:35:32     2009-12-11 14:39:18     3.7666666666666666
+Read    2009-12-11 15:30:36     2009-12-11 16:05:49     35.21666666666667
+Master_Bathroom 2009-12-11 22:46:57     2009-12-11 22:47:48     0.85
