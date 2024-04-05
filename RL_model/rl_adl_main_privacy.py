@@ -68,7 +68,7 @@ LOCATION_DIR_SPLIT_SYMBOL = ':'
 BATHROOM = 'athroom'
 
 new_activity_factor = 1.0 # when detect new activity, reward more 
-MOTION_TRANSITION_REWARD = 2 # when detect the walking transition, reward + 1
+MOTION_TRANSITION_REWARD = 1 # when detect the walking transition, reward + 1
 
 update_cache_cnt = 0
 
@@ -493,10 +493,15 @@ def transition_feature_extractor(pre_motion_type, motion_type):
 
 # 0.1 = 1, 0.2=> 2, 0.9 => 9
 def activity_duration_feature_extractor(p):
+    p = min(0.9999, p)
+    p = max(0.00001, p)
+    # class_vector =[int((p)*10)]
+    # output_matrix = to_categorical(class_vector, num_classes = 10, dtype ="int32")
 
-    class_vector =[int(p*10)]
+    p = 1 if p > 0.5 else 0
+    class_vector =[p]
 
-    output_matrix = to_categorical(class_vector, num_classes = 10, dtype ="int32")
+    output_matrix = to_categorical(class_vector, num_classes = 2, dtype ="int32")
 
     # print(output_matrix)
     # [[0 0 0 0 0 1]]
@@ -622,7 +627,7 @@ def get_pre_act_list():
 for act in motion_adl_bayes_model.PROB_OF_ALL_ACTIVITIES.keys():
     res_prob[act] = []
 
-episode_count = 12 # 200 
+episode_count = 10 # 200 
 batch_size = 128
 
 # stores the reward per episode
@@ -1059,16 +1064,30 @@ def construct_reward(action, ground_truth_act, location = ''):
     reward = reward_accuracy*w_accuracy - reward_energy*w_energy - reward_privacy*w_privacy
     motion_transition_occur_flag = True
 
-    if motion_transition_occur_flag == True:
-            if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
-                # reward = reward + MOTION_TRANSITION_REWARD
-                reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+    if motion_transition_occur_flag == True and reward_accuracy == 1:
+            if location in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+                if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+                    reward = reward + MOTION_TRANSITION_REWARD
+            # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
+            else:
 
-        # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision:
-        #     reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
+                if p_activity_end > 0.5:
+                    if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+                        reward = reward + MOTION_TRANSITION_REWARD
+            #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+                else:
+                    reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
+
+    # if motion_transition_occur_flag == True:
+    #         if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+    #             # reward = reward + MOTION_TRANSITION_REWARD
+    #             reward = reward + MOTION_TRANSITION_REWARD - (reward_privacy)*MOTION_TRANSITION_REWARD
+
+    #     # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision:
+    #     #     reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
                 
-            if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_vision:
-                reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+    #         if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_vision:
+    #             reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
 
         #reward = reward + MOTION_TRANSITION_REWARD
 
@@ -1143,8 +1162,9 @@ state = transition_feature + current_activity_feature + robot_trigger_feature + 
 #state = transition_feature + current_activity_feature + robot_trigger_feature + battery_feature + predicted_act_feature
 #state = transition_feature + current_activity_feature + predicted_act_feature  # need train more times
 
-p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(current_activity_duration, current_activity)
 p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
+# p_current_activity_duration_feature = [p_activity_end]
 
 location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
 location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
@@ -1166,12 +1186,12 @@ agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, memory_s
 
 
 # for test and reload the pretrained model
-# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.003, memory_size = 1280)
+# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = 1280)
 # agent.load_weights()
 
 # for test and reload the pretrained model
-# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.007, memory_size = 1280)
-# agent.load_weights()
+agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.017, memory_size = 1280)
+agent.load_weights()
 
 #agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.001, memory_size = 1280)
 #agent.load_weights()
@@ -1275,7 +1295,7 @@ for episode in range(episode_count):
     current_activity = get_activity_by_time_str(cur_time_str)
     current_activity_duration = (cur_time - activity_begin_time).seconds / 60 # in minutes
 
-    p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+    p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(current_activity_duration, current_activity)
     current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
 
     # current_activity_feature = adl_hidden_feature_extractor(current_activity)
@@ -1300,9 +1320,9 @@ for episode in range(episode_count):
     #state = transition_feature + current_activity_feature + robot_trigger_feature + battery_feature + predicted_act_feature
     #state = transition_feature + current_activity_feature + predicted_act_feature
 
-    p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+    p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(current_activity_duration, current_activity)
     p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
-
+    # p_current_activity_duration_feature = [p_activity_end]
     location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
     location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
     location_feature = list(location_feature)
@@ -1495,16 +1515,22 @@ for episode in range(episode_count):
         reward = reward_accuracy*w_accuracy - reward_energy*w_energy - reward_privacy*w_privacy
         
         # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
+        # two options: 1) add the data (penalty) when turn on robot sensors in private room, which is hard 
+        #              2) add the data (reward)  when turn on WMU sensors in private room, which is easy
         if motion_transition_occur_flag == True and reward_accuracy == 1:
-            if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
-                if p_activity_end > 0.5:
+            if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+                if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
                     reward = reward + MOTION_TRANSITION_REWARD
             # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
-            
-            # if p_activity_end > 0.5:
+            else:
+
+                if p_activity_end > 0.5:
+                    if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+                        reward = reward + MOTION_TRANSITION_REWARD
             #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
-            
-            reward = reward - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+                else:
+                    reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
+                
             # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision:
             #     reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
             
@@ -1575,9 +1601,11 @@ for episode in range(episode_count):
         #predicted_act_feature = adl_hidden_feature_extractor(predicted_activity) 
         #predicted_act_feature = list(predicted_act_feature)
  
-        p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+        p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(current_activity_duration, current_activity)
         p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
-        print('cur_act {}, p {}, feature {} '.format(cur_activity, p_activity_end, p_current_activity_duration_feature))
+        # p_current_activity_duration_feature = [p_activity_end]
+        if p_activity_end == 0.5:
+            print('cur_act {}, p {}, feature {} '.format(cur_activity, p_activity_end, p_current_activity_duration_feature))
 
         next_state = transition_feature + current_activity_feature 
         next_state = transition_feature + current_activity_feature + robot_trigger_feature + battery_feature
