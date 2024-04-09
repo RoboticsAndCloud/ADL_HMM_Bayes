@@ -43,7 +43,7 @@ print(mem_top(limit=15,width=180))
 
 
 OUTPUT_RANK = False
-DEBUG = True
+DEBUG = False
 
 MILAN_BASE_DATE = '2009-10-16'
 
@@ -71,6 +71,12 @@ new_activity_factor = 1.0 # when detect new activity, reward more
 MOTION_TRANSITION_REWARD = 1 # when detect the walking transition, reward + 1
 
 update_cache_cnt = 0
+
+P_THRESHOLD = 0.1
+
+# True: train the data of all the data including transition, non-transition
+# False: just train the transition data
+TRAINING_FOR_ALL = True
 
 """
 Given the duration, return the probability that the activity may be finished
@@ -480,10 +486,12 @@ def transition_feature_extractor(pre_motion_type, motion_type):
         tran = 1
     elif pre_motion_type != motion_type and (motion_type == 'sitting'):
         tran = 2
+    elif pre_motion_type != motion_type and (motion_type == 'standing'):
+        tran = 3   
 
     class_vector =[tran]
 
-    output_matrix = to_categorical(class_vector, num_classes = 3, dtype ="int32")
+    output_matrix = to_categorical(class_vector, num_classes = 4, dtype ="int32")
 
     print('in transition feature extractor:', pre_motion_type, ' ,', motion_type, ' feature:', output_matrix[0])
     # print(output_matrix)
@@ -498,7 +506,7 @@ def activity_duration_feature_extractor(p):
     # class_vector =[int((p)*10)]
     # output_matrix = to_categorical(class_vector, num_classes = 10, dtype ="int32")
 
-    p = 1 if p > 0.5 else 0
+    p = 1 if p > P_THRESHOLD else 0
     class_vector =[p]
 
     output_matrix = to_categorical(class_vector, num_classes = 2, dtype ="int32")
@@ -508,16 +516,16 @@ def activity_duration_feature_extractor(p):
 
     return output_matrix[0]
 
-def battery_feature_extractor(battery_level):
+# def battery_feature_extractor(battery_level):
 
-    class_vector =[battery_level]
+#     class_vector =[battery_level]
 
-    output_matrix = to_categorical(class_vector, num_classes = 4, dtype ="int32")
+#     output_matrix = to_categorical(class_vector, num_classes = 4, dtype ="int32")
 
-    # print(output_matrix)
-    # [[0 0 0 0 0 1]]
+#     # print(output_matrix)
+#     # [[0 0 0 0 0 1]]
 
-    return output_matrix[0]
+#     return output_matrix[0]
 
 def motion_feature_extractor(motion_type):
     # motion_type, motion_type_prob = get_motion_type_by_activity_cnn(cur_time_str)
@@ -628,7 +636,7 @@ for act in motion_adl_bayes_model.PROB_OF_ALL_ACTIVITIES.keys():
     res_prob[act] = []
 
 episode_count = 10 # 200 
-batch_size = 128
+batch_size = 128 * 2
 
 # stores the reward per episode
 scores = deque(maxlen=1000)
@@ -1023,6 +1031,9 @@ def get_activity_by_action(cur_time_str, action):
 
 def trigger_times_normalization(times):
     n_t = times*1.0/rl_env_ascc_privacy.MAX_TRIGGER_TIMES
+
+    n_t = 0
+
     return n_t
 
 def construct_reward(action, ground_truth_act, location = ''):
@@ -1065,18 +1076,59 @@ def construct_reward(action, ground_truth_act, location = ''):
     motion_transition_occur_flag = True
 
     if motion_transition_occur_flag == True and reward_accuracy == 1:
-            if location in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
-                if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
-                    reward = reward + MOTION_TRANSITION_REWARD
-            # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
-            else:
+        if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+            # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+            reward = reward + MOTION_TRANSITION_REWARD
+        # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
+        # else:
 
-                if p_activity_end > 0.5:
-                    if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
-                        reward = reward + MOTION_TRANSITION_REWARD
-            #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
-                else:
-                    reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
+            # if p_activity_end > P_THRESHOLD:
+            # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+        #         reward = reward + MOTION_TRANSITION_REWARD
+        # #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+        #     else:
+            # reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
+            
+        # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision:
+        #     reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
+        
+        # reward = reward - (reward_privacy)*MOTION_TRANSITION_REWARD
+
+        # reward = reward + MOTION_TRANSITION_REWARD
+        #if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_WMU_fusion:
+        #    reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
+            #reward = reward - (reward_energy+reward_privacy-1)*MOTION_TRANSITION_REWARD
+        #if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision:
+        #    reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
+            #reward = reward - (reward_energy+reward_privacy-1)*MOTION_TRANSITION_REWARD
+    if sitting_motion_transition_occur_flag == True and reward_accuracy == 1:
+        if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+            if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+                reward = reward + (1- reward_energy) *MOTION_TRANSITION_REWARD 
+        else:
+            reward = reward + (1- reward_privacy - reward_energy) *MOTION_TRANSITION_REWARD 
+
+    if standing_motion_transition_occur_flag == True and reward_accuracy == 1:
+        if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+            if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+                reward = reward + (1- reward_energy) *MOTION_TRANSITION_REWARD 
+        else:
+            reward = reward + (1- reward_privacy - reward_energy) *MOTION_TRANSITION_REWARD       
+
+
+    # if motion_transition_occur_flag == True and reward_accuracy == 1:
+    #         if location in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+    #             if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+    #                 reward = reward + MOTION_TRANSITION_REWARD
+    #         # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
+    #         else:
+
+    #             if p_activity_end > P_THRESHOLD:
+    #                 if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+    #                     reward = reward + MOTION_TRANSITION_REWARD
+    #         #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+    #             else:
+    #                 reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
 
     # if motion_transition_occur_flag == True:
     #         if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
@@ -1168,7 +1220,7 @@ p_current_activity_duration_feature = activity_duration_feature_extractor(p_acti
 
 location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
 location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
-state = state + list(location_feature) + list(p_current_activity_duration_feature)
+state = state + list(location_feature)
 
 state_size = len(state)
 state = np.reshape(state, [1, state_size])
@@ -1182,18 +1234,22 @@ actions = []
 action_space = list(rl_env_ascc_privacy.RL_ACTION_DICT.keys())
 
 import rl_ascc_dqn
-agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, memory_size = 1280)
-
+memory_size = 1024*10
+if TRAINING_FOR_ALL == True:
+    agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, memory_size = memory_size)
+else:
+    agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = memory_size)
+    agent.load_weights()
 
 # for test and reload the pretrained model
-# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = 1280)
+# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = memory_size)
 # agent.load_weights()
 
 # for test and reload the pretrained model
-agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.017, memory_size = 1280)
-agent.load_weights()
+# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.001, memory_size = memory_size)
+# agent.load_weights()
 
-#agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.001, memory_size = 1280)
+#agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.001, memory_size = memory_size)
 #agent.load_weights()
 
 
@@ -1242,6 +1298,8 @@ for episode in range(episode_count):
     
     transition_occur_cnt = 0
     motion_transition_occur_cnt = 0
+    sitting_motion_transition_occur_cnt = 0
+    standing_motion_transition_occur_cnt = 0
     env.reset()
     while(pre_activity == ''):
         # open camera
@@ -1326,7 +1384,7 @@ for episode in range(episode_count):
     location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
     location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
     location_feature = list(location_feature)
-    state = state + location_feature + list(p_current_activity_duration_feature)
+    state = state + location_feature
 
     state_size = len(state)
     state = np.reshape(state, [1, state_size])
@@ -1413,17 +1471,25 @@ for episode in range(episode_count):
         # walking motion
         # TODO: only accucy == 1, then giving the transition reward
         motion_transition_occur_flag = False
+        sitting_motion_transition_occur_flag = False
+        standing_motion_transition_occur_flag = False
         if pre_motion_type != motion_type and (pre_motion_type == 'walking' or motion_type == 'walking'):
             print('activity:', pre_activity, ' ', ground_truth_activity)
             motion_transition_occur_cnt += 1
-            print('motion_transition_occur_cnt:', motion_transition_occur_cnt)
+            print('activiy {} motion_transition_occur_cnt: {} p_activity {}'.format(cur_activity, motion_transition_occur_cnt, p_activity_end))
             motion_transition_occur_flag = True
 
-        # if pre_motion_type != motion_type and (motion_type == 'sitting'):
-        #     print('activity:', pre_activity, ' ', ground_truth_activity)
-        #     # motion_transition_occur_cnt += 1
-        #     print('motion_transition_occur_cnt:', motion_transition_occur_cnt)
-        #     motion_transition_occur_flag = True
+        elif pre_motion_type != motion_type and (motion_type == 'sitting'):
+            print('activity:', pre_activity, ' ', ground_truth_activity)
+            sitting_motion_transition_occur_cnt += 1
+            print('sitting_motion_transition_occur_cnt:', sitting_motion_transition_occur_cnt)
+            sitting_motion_transition_occur_flag = True
+
+        elif pre_motion_type != motion_type and (motion_type == 'standing'):
+            print('activity:', pre_activity, ' ', ground_truth_activity)
+            standing_motion_transition_occur_cnt += 1
+            print('standing_motion_transition_occur_cnt:', standing_motion_transition_occur_cnt)
+            standing_motion_transition_occur_flag = True
 
         if pre_activity != ground_truth_activity and ground_truth_activity!='':
             if DEBUG:
@@ -1518,18 +1584,18 @@ for episode in range(episode_count):
         # two options: 1) add the data (penalty) when turn on robot sensors in private room, which is hard 
         #              2) add the data (reward)  when turn on WMU sensors in private room, which is easy
         if motion_transition_occur_flag == True and reward_accuracy == 1:
-            if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
-                if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
-                    reward = reward + MOTION_TRANSITION_REWARD
+            # if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+            if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+                reward = reward + MOTION_TRANSITION_REWARD
             # the data is unbanlenced for privacy actions in the private room, as the private location is with small ratio, so we need make it up
-            else:
+            # else:
 
-                if p_activity_end > 0.5:
-                    if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
-                        reward = reward + MOTION_TRANSITION_REWARD
-            #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
-                else:
-                    reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
+                # if p_activity_end > P_THRESHOLD:
+                # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+            #         reward = reward + MOTION_TRANSITION_REWARD
+            # #     reward = reward + MOTION_TRANSITION_REWARD - (reward_energy+reward_privacy)*MOTION_TRANSITION_REWARD
+            #     else:
+                # reward = reward +(1- reward_energy-reward_privacy)*MOTION_TRANSITION_REWARD/2.0
                 
             # if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision:
             #     reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
@@ -1543,6 +1609,19 @@ for episode in range(episode_count):
             #if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_vision:
             #    reward = reward - (reward_energy+reward_privacy-reward_accuracy)*MOTION_TRANSITION_REWARD + MOTION_TRANSITION_REWARD
                 #reward = reward - (reward_energy+reward_privacy-1)*MOTION_TRANSITION_REWARD
+        if sitting_motion_transition_occur_flag == True and reward_accuracy == 1:
+            # if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+            #     if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+            #         reward = reward + (1- reward_energy) *MOTION_TRANSITION_REWARD 
+            # else:
+            reward = reward + (1- reward_privacy - reward_energy) *MOTION_TRANSITION_REWARD 
+
+        if standing_motion_transition_occur_flag == True and reward_accuracy == 1:
+            # if location_type in rl_env_ascc_privacy.PRIVACY_LOCATION_LIST:
+            #     if rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_fusion or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.WMU_vision or rl_env_ascc_privacy.RL_ACTION_DICT[action] == rl_env_ascc_privacy.Robot_audio_WMU_vision : 
+            #         reward = reward + (1- reward_energy) *MOTION_TRANSITION_REWARD 
+            # else:
+            reward = reward + (1- reward_privacy - reward_energy) *MOTION_TRANSITION_REWARD       
 
         if DEBUG:
             print("Env motion:", pre_motion_type)
@@ -1614,32 +1693,52 @@ for episode in range(episode_count):
         location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
         location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
         location_feature = list(location_feature)
-        next_state = next_state + location_feature + list(p_current_activity_duration_feature)
+        next_state = next_state + location_feature
 
         next_state = np.reshape(next_state, [1, state_size])
 
         t_transition_feature = state[0][:len(transition_feature)]
-        print("t_transition_feature:", t_transition_feature)
+        print("t_transition_feature:", t_transition_feature)  # 0 1 0, walking , 1 0 0, standing
+
+#         in transition feature extractor: sitting  , sitting  feature: [1 0 0 0]
+# in transition feature extractor: standing  , standing  feature: [1 0 0 0]
+# in transition feature extractor: walking  , walking  feature: [1 0 0 0]
+
+
+
+# in transition feature extractor: walking  , sitting  feature: [0 1 0 0]
+# in transition feature extractor: standing  , sitting  feature: [0 0 1 0]
+# in transition feature extractor: sitting  , standing  feature: [0 0 0 1]
         #print("t_transition_feature:", list(t_transition_feature))
         #if motion_transition_occur_flag == True:
-        if t_transition_feature[0] == 0 :
+        # TODO: how to remember the transition states to retrain the model, this kind of information is in shortage
+        if t_transition_feature[1] == 1 or t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
             #agent.remember(state, action, reward, next_state, env.done)
             agent.remember_transition(state, action, reward, next_state, env.done)
             #agent.remember(state, action, reward, next_state, env.done)
 
+            if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
+                agent.remember_transition_sit_stand(state, action, reward, next_state, env.done)
+
+
             # construction_state()
-            print("construct:", motion_transition_occur_flag)
-            print("construct 0:", next_state)
+            # print("construct:", motion_transition_occur_flag)
+            # print("construct 0:", next_state)
+
+            def wmu_cam_rand():
+                
+                return random.randint(1, 1000)
 
 
-
-
-            for samples in range(1, 2):
+            for samples in range(batch_size):
                 #robot_trigger_times = random.randint(env.robot_trigger_times, env.robot_trigger_times + 100)
                 robot_trigger_times = env.robot_trigger_times
                 # for robot_trigger_times in range(1, 3000):
                 t_transition_feature = state[0][:len(transition_feature)]
-                t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+                
+                cons_wmu_times = wmu_cam_rand() # 1 - 200
+
+                t_battery_feature = [trigger_times_normalization(wmu_cam_times + cons_wmu_times)]
                 t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
                 t_robot_feature = [trigger_times_normalization(robot_trigger_times)]
                 t_predicted_act_feature = state[0][-len(predicted_act_feature):]
@@ -1652,12 +1751,13 @@ for episode in range(episode_count):
                 new_state = list(t_transition_feature) + list(t_current_activity_feature) 
                 new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
                 # new_state = list(t_transition_feature) + list(t_current_activity_feature)
-                new_state = new_state + location_feature + list(p_current_activity_duration_feature)
+                new_state = new_state + location_feature
 
                 # #print("new state:", new_state)
                 new_state = np.reshape(new_state, [1, state_size])
                 
-                tn_battery_feature = [trigger_times_normalization(wmu_cam_times+1)]
+                
+                tn_battery_feature = [trigger_times_normalization(wmu_cam_times+ cons_wmu_times + 1)]
                 tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
                 new_next_state = transition_feature + current_activity_feature 
                 new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
@@ -1669,55 +1769,174 @@ for episode in range(episode_count):
                 # p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
                 # p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
 
-                new_next_state = new_next_state + location_feature + list(p_current_activity_duration_feature)
+                new_next_state = new_next_state + location_feature
                 new_next_state = np.reshape(new_next_state, [1, state_size])
 
                 
                 # todo update reward function
-                con_reward = construct_reward(0, current_activity, location_type)
+                # con_reward = construct_reward(0, current_activity, location_type)
+                con_reward = reward
                 # agent.remember(new_state, 0, con_reward, new_next_state, env.done)
                 agent.remember_transition(new_state, 0, con_reward, new_next_state, env.done)
+                if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
+                    agent.remember_transition_sit_stand(new_state, 0, con_reward, new_next_state, env.done)
 
                 if DEBUG:
                     print("construct 1-1 :", new_next_state, ' r:', con_reward)
 
+                cons_robot_times = wmu_cam_rand() # 1 - 200
+                t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+                t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+                t_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times)]
+                t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+
+                # print("t_transition_feature:", t_transition_feature)
+                # print("t_battery_feature:", t_battery_feature)
+                # print("t_current_activity_feature:", t_current_activity_feature)
+                # print("t_robot_feature:", t_robot_feature)
+                
+                new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+                new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+                # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+                new_state = new_state + location_feature
+
+                # #print("new state:", new_state)
+                new_state = np.reshape(new_state, [1, state_size])
 
                 tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                tn_robot_feature = [trigger_times_normalization(robot_trigger_times+1)]
+                tn_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times + 1)]
                 new_next_state = transition_feature + current_activity_feature 
                 new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
                 #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
                 #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                new_next_state = new_next_state + location_feature + list(p_current_activity_duration_feature)
+                new_next_state = new_next_state + location_feature
 
                 new_next_state = np.reshape(new_next_state, [1, state_size])
 
-                con_reward = construct_reward(1,current_activity, location_type)
+                con_reward = reward
 
                 #agent.remember(new_state, 1, con_reward, new_next_state, env.done)
 
                 agent.remember_transition(new_state, 1, con_reward, new_next_state, env.done)
+                if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
+                    agent.remember_transition_sit_stand(new_state, 1, con_reward, new_next_state, env.done)
 
                 if DEBUG:
                     print("construct 1-2 :", new_next_state, ' r:', con_reward)
 
-                tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
-                new_next_state = transition_feature + current_activity_feature 
-                new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
-                #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
-                #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                new_next_state = new_next_state + location_feature + list(p_current_activity_duration_feature)
-                new_next_state = np.reshape(new_next_state, [1, state_size])
-                con_reward = construct_reward(2, current_activity, location_type)
-                agent.remember_transition(new_state, 2, con_reward, new_next_state, env.done)
+                # tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+                # tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+                # new_next_state = transition_feature + current_activity_feature 
+                # new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+                # #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+                # #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+                # new_next_state = new_next_state + location_feature 
+                # new_next_state = np.reshape(new_next_state, [1, state_size])
+                # con_reward = construct_reward(2, current_activity, location_type)
+                # agent.remember_transition(new_state, 2, con_reward, new_next_state, env.done)
 
-                if DEBUG:
-                    print("construct 1-3 :", new_next_state, ' r:', con_reward)
+                # if DEBUG:
+                #     print("construct 1-3 :", new_next_state, ' r:', con_reward)
 
 
         else:
             agent.remember(state, action, reward, next_state, env.done)
+
+            if TRAINING_FOR_ALL == False:
+                # print("construct common state:", motion_transition_occur_flag)
+                # print("construct common state 0:", next_state)
+
+                def wmu_cam_rand():
+                    return random.randint(1, 1000)
+
+
+                for samples in range(batch_size):
+                    #robot_trigger_times = random.randint(env.robot_trigger_times, env.robot_trigger_times + 100)
+                    robot_trigger_times = env.robot_trigger_times
+                    # for robot_trigger_times in range(1, 3000):
+                    t_transition_feature = state[0][:len(transition_feature)]
+                    
+                    cons_wmu_times = wmu_cam_rand() # 1 - 200
+
+                    t_battery_feature = [trigger_times_normalization(wmu_cam_times + cons_wmu_times)]
+                    t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+                    t_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+                    t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+
+                    # print("t_transition_feature:", t_transition_feature)
+                    # print("t_battery_feature:", t_battery_feature)
+                    # print("t_current_activity_feature:", t_current_activity_feature)
+                    # print("t_robot_feature:", t_robot_feature)
+                    
+                    new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+                    new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+                    # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+                    new_state = new_state + location_feature
+
+                    # #print("new state:", new_state)
+                    new_state = np.reshape(new_state, [1, state_size])
+                    
+                    
+                    tn_battery_feature = [trigger_times_normalization(wmu_cam_times+ cons_wmu_times + 1)]
+                    tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+                    new_next_state = transition_feature + current_activity_feature 
+                    new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+                    #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+                    #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+                    #location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
+                    #location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
+                    #location_feature = list(location_feature)
+                    # p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+                    # p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
+
+                    new_next_state = new_next_state + location_feature
+                    new_next_state = np.reshape(new_next_state, [1, state_size])
+
+                    
+                    # todo update reward function
+                    # con_reward = construct_reward(0, current_activity, location_type)
+                    con_reward = reward
+                    # agent.remember(new_state, 0, con_reward, new_next_state, env.done)
+                    agent.remember(new_state, 0, con_reward, new_next_state, env.done)
+
+                    if DEBUG:
+                        print("construct common 1-1 :", new_next_state, ' r:', con_reward)
+
+                    cons_robot_times = wmu_cam_rand() # 1 - 200
+                    t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+                    t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+                    t_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times)]
+                    t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+
+                    # print("t_transition_feature:", t_transition_feature)
+                    # print("t_battery_feature:", t_battery_feature)
+                    # print("t_current_activity_feature:", t_current_activity_feature)
+                    # print("t_robot_feature:", t_robot_feature)
+                    
+                    new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+                    new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+                    # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+                    new_state = new_state + location_feature
+
+                    # #print("new state:", new_state)
+                    new_state = np.reshape(new_state, [1, state_size])
+
+                    tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+                    tn_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times + 1)]
+                    new_next_state = transition_feature + current_activity_feature 
+                    new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+                    #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+                    #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+                    new_next_state = new_next_state + location_feature
+
+                    new_next_state = np.reshape(new_next_state, [1, state_size])
+
+                    con_reward = reward
+
+                    agent.remember(new_state, 1, con_reward, new_next_state, env.done)
+
+                    if DEBUG:
+                        print("construct common 1-2 :", new_next_state, ' r:', con_reward)
 
         # agent.remember(state, action, reward, next_state, env.done)    
 
@@ -1750,11 +1969,12 @@ for episode in range(episode_count):
             print("len mem tra:", len_mem_tra)
             if len_mem > batch_size and len_mem_tra > batch_size:
                 #agent.replay(batch_size)
-                agent.replay2(batch_size)
+                # if TRAINING_FOR_ALL:
+                agent.replay2(batch_size)  # comment
                 agent.replay2(batch_size, transition=True)
             else:
                 #agent.replay(len_mem-1)
-                agent.replay2(len(agent.memory))
+                agent.replay2(len(agent.memory))  # comment
                 if len(agent.memory_transition) > 0:
                     agent.replay2(len(agent.memory_transition), transition=True)
             
