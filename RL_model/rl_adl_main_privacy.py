@@ -549,11 +549,19 @@ def adl_hidden_feature_extractor(act):
     act_id = tools_ascc.get_key(tools_ascc.ACTIVITY_DICT, act)
 
     class_vector =[act_id]
+
+    # Our dataset is small, not enough, some noise data like 'livingroom, eating' may occur in daily life, but current dataset does not include this
+    # Two ways: 1) construct the data 
+    #           2) after analysis, we found this feature can be ignored, so we set to 0, may not work, as in lilving room, watch tv can be deteted with audio, but reading, need vision and audio
+    # class_vector =[0]
+
+
+
     # print(class_vector)
 
     # Applying the function on input class vector
     #from keras.utils import to_categorical
-    output_matrix = to_categorical(class_vector, num_classes = len(tools_ascc.ACTIVITY_DICT), dtype ="int32")
+    output_matrix = to_categorical(class_vector, num_classes = len(tools_ascc.ACTIVITY_DICT)+2, dtype ="int32")
 
     return output_matrix[0]
 
@@ -636,7 +644,7 @@ for act in motion_adl_bayes_model.PROB_OF_ALL_ACTIVITIES.keys():
     res_prob[act] = []
 
 episode_count = 10 # 200 
-batch_size = 128 * 2
+batch_size = 128
 
 # stores the reward per episode
 scores = deque(maxlen=1000)
@@ -1234,16 +1242,17 @@ actions = []
 action_space = list(rl_env_ascc_privacy.RL_ACTION_DICT.keys())
 
 import rl_ascc_dqn
-memory_size = 1024*10
-if TRAINING_FOR_ALL == True:
-    agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, memory_size = memory_size)
-else:
-    agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = memory_size)
-    agent.load_weights()
+# large memory may not work, the old values would be ignored when training as it can not update the loss function
+memory_size = 1024 * 2
+# if TRAINING_FOR_ALL == True:
+#     agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, memory_size = memory_size)
+# else:
+#     agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = memory_size)
+#     agent.load_weights()
 
-# for test and reload the pretrained model
-# agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.07, memory_size = memory_size)
-# agent.load_weights()
+# # for test and reload the pretrained model
+agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.01, memory_size = memory_size)
+agent.load_weights()
 
 # for test and reload the pretrained model
 # agent = rl_ascc_dqn.DQNAgent(state.size, action_space, episodes=500*10, epsilon = 0.001, memory_size = memory_size)
@@ -1356,7 +1365,7 @@ for episode in range(episode_count):
     p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(current_activity_duration, current_activity)
     current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
 
-    # current_activity_feature = adl_hidden_feature_extractor(current_activity)
+    current_activity_feature = adl_hidden_feature_extractor(current_activity)
     # current_activity_duration_feature = current_activity_duration
 
     # features = motion_feature
@@ -1666,7 +1675,7 @@ for episode in range(episode_count):
 
         #end_t_iter = timer()
 
-        # current_activity_feature = adl_hidden_feature_extractor(current_activity)
+        current_activity_feature = adl_hidden_feature_extractor(current_activity)
         # current_activity_duration_feature = current_activity_duration
 
 
@@ -1730,213 +1739,214 @@ for episode in range(episode_count):
                 return random.randint(1, 1000)
 
 
-            for samples in range(batch_size):
-                #robot_trigger_times = random.randint(env.robot_trigger_times, env.robot_trigger_times + 100)
-                robot_trigger_times = env.robot_trigger_times
-                # for robot_trigger_times in range(1, 3000):
-                t_transition_feature = state[0][:len(transition_feature)]
+            # for samples in range(0):
+            #     #robot_trigger_times = random.randint(env.robot_trigger_times, env.robot_trigger_times + 100)
+            #     robot_trigger_times = env.robot_trigger_times
+            #     # for robot_trigger_times in range(1, 3000):
+            #     t_transition_feature = state[0][:len(transition_feature)]
                 
-                cons_wmu_times = wmu_cam_rand() # 1 - 200
+            #     cons_wmu_times = wmu_cam_rand() # 1 - 200
 
-                t_battery_feature = [trigger_times_normalization(wmu_cam_times + cons_wmu_times)]
-                t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
-                t_robot_feature = [trigger_times_normalization(robot_trigger_times)]
-                t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+            #     t_battery_feature = [trigger_times_normalization(wmu_cam_times + cons_wmu_times)]
+            #     t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+            #     t_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+            #     t_predicted_act_feature = state[0][-len(predicted_act_feature):]
 
-                # print("t_transition_feature:", t_transition_feature)
-                # print("t_battery_feature:", t_battery_feature)
-                # print("t_current_activity_feature:", t_current_activity_feature)
-                # print("t_robot_feature:", t_robot_feature)
+            #     # print("t_transition_feature:", t_transition_feature)
+            #     # print("t_battery_feature:", t_battery_feature)
+            #     # print("t_current_activity_feature:", t_current_activity_feature)
+            #     # print("t_robot_feature:", t_robot_feature)
                 
-                new_state = list(t_transition_feature) + list(t_current_activity_feature) 
-                new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
-                # new_state = list(t_transition_feature) + list(t_current_activity_feature)
-                new_state = new_state + location_feature
+            #     pre_location_feature = state[-6:] # todo, get location feature from the previsous 
+            #     new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+            #     new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+            #     # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+            #     new_state = new_state + pre_location_feature
 
-                # #print("new state:", new_state)
-                new_state = np.reshape(new_state, [1, state_size])
+            #     # #print("new state:", new_state)
+            #     new_state = np.reshape(new_state, [1, state_size])
                 
                 
-                tn_battery_feature = [trigger_times_normalization(wmu_cam_times+ cons_wmu_times + 1)]
-                tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
-                new_next_state = transition_feature + current_activity_feature 
-                new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
-                #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
-                #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                #location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
-                #location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
-                #location_feature = list(location_feature)
-                # p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
-                # p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
+            #     tn_battery_feature = [trigger_times_normalization(wmu_cam_times+ cons_wmu_times + 1)]
+            #     tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+            #     new_next_state = transition_feature + current_activity_feature 
+            #     new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+            #     #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+            #     #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+            #     #location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
+            #     #location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
+            #     #location_feature = list(location_feature)
+            #     # p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+            #     # p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
 
-                new_next_state = new_next_state + location_feature
-                new_next_state = np.reshape(new_next_state, [1, state_size])
+            #     new_next_state = new_next_state + location_feature
+            #     new_next_state = np.reshape(new_next_state, [1, state_size])
 
                 
-                # todo update reward function
-                # con_reward = construct_reward(0, current_activity, location_type)
-                con_reward = reward
-                # agent.remember(new_state, 0, con_reward, new_next_state, env.done)
-                agent.remember_transition(new_state, 0, con_reward, new_next_state, env.done)
-                if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
-                    agent.remember_transition_sit_stand(new_state, 0, con_reward, new_next_state, env.done)
+            #     # todo update reward function
+            #     # con_reward = construct_reward(0, current_activity, location_type)
+            #     con_reward = reward
+            #     # agent.remember(new_state, 0, con_reward, new_next_state, env.done)
+            #     agent.remember_transition(new_state, 0, con_reward, new_next_state, env.done)
+            #     if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
+            #         agent.remember_transition_sit_stand(new_state, 0, con_reward, new_next_state, env.done)
 
-                if DEBUG:
-                    print("construct 1-1 :", new_next_state, ' r:', con_reward)
+            #     if DEBUG:
+            #         print("construct 1-1 :", new_next_state, ' r:', con_reward)
 
-                cons_robot_times = wmu_cam_rand() # 1 - 200
-                t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
-                t_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times)]
-                t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+            #     cons_robot_times = wmu_cam_rand() # 1 - 200
+            #     t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+            #     t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+            #     t_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times)]
+            #     t_predicted_act_feature = state[0][-len(predicted_act_feature):]
 
-                # print("t_transition_feature:", t_transition_feature)
-                # print("t_battery_feature:", t_battery_feature)
-                # print("t_current_activity_feature:", t_current_activity_feature)
-                # print("t_robot_feature:", t_robot_feature)
+            #     # print("t_transition_feature:", t_transition_feature)
+            #     # print("t_battery_feature:", t_battery_feature)
+            #     # print("t_current_activity_feature:", t_current_activity_feature)
+            #     # print("t_robot_feature:", t_robot_feature)
                 
-                new_state = list(t_transition_feature) + list(t_current_activity_feature) 
-                new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
-                # new_state = list(t_transition_feature) + list(t_current_activity_feature)
-                new_state = new_state + location_feature
+            #     new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+            #     new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+            #     # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+            #     new_state = new_state + pre_location_feature
 
-                # #print("new state:", new_state)
-                new_state = np.reshape(new_state, [1, state_size])
+            #     # #print("new state:", new_state)
+            #     new_state = np.reshape(new_state, [1, state_size])
 
-                tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                tn_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times + 1)]
-                new_next_state = transition_feature + current_activity_feature 
-                new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
-                #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
-                #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                new_next_state = new_next_state + location_feature
+            #     tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+            #     tn_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times + 1)]
+            #     new_next_state = transition_feature + current_activity_feature 
+            #     new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+            #     #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+            #     #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+            #     new_next_state = new_next_state + location_feature
 
-                new_next_state = np.reshape(new_next_state, [1, state_size])
+            #     new_next_state = np.reshape(new_next_state, [1, state_size])
 
-                con_reward = reward
+            #     con_reward = reward
 
-                #agent.remember(new_state, 1, con_reward, new_next_state, env.done)
+            #     #agent.remember(new_state, 1, con_reward, new_next_state, env.done)
 
-                agent.remember_transition(new_state, 1, con_reward, new_next_state, env.done)
-                if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
-                    agent.remember_transition_sit_stand(new_state, 1, con_reward, new_next_state, env.done)
+            #     agent.remember_transition(new_state, 1, con_reward, new_next_state, env.done)
+            #     if t_transition_feature[2] == 1 or t_transition_feature[3] == 1:
+            #         agent.remember_transition_sit_stand(new_state, 1, con_reward, new_next_state, env.done)
 
-                if DEBUG:
-                    print("construct 1-2 :", new_next_state, ' r:', con_reward)
+            #     if DEBUG:
+            #         print("construct 1-2 :", new_next_state, ' r:', con_reward)
 
-                # tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                # tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
-                # new_next_state = transition_feature + current_activity_feature 
-                # new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
-                # #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
-                # #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                # new_next_state = new_next_state + location_feature 
-                # new_next_state = np.reshape(new_next_state, [1, state_size])
-                # con_reward = construct_reward(2, current_activity, location_type)
-                # agent.remember_transition(new_state, 2, con_reward, new_next_state, env.done)
+            #     # tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+            #     # tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+            #     # new_next_state = transition_feature + current_activity_feature 
+            #     # new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+            #     # #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+            #     # #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+            #     # new_next_state = new_next_state + location_feature 
+            #     # new_next_state = np.reshape(new_next_state, [1, state_size])
+            #     # con_reward = construct_reward(2, current_activity, location_type)
+            #     # agent.remember_transition(new_state, 2, con_reward, new_next_state, env.done)
 
-                # if DEBUG:
-                #     print("construct 1-3 :", new_next_state, ' r:', con_reward)
+            #     # if DEBUG:
+            #     #     print("construct 1-3 :", new_next_state, ' r:', con_reward)
 
 
         else:
             agent.remember(state, action, reward, next_state, env.done)
 
-            if TRAINING_FOR_ALL == False:
-                # print("construct common state:", motion_transition_occur_flag)
-                # print("construct common state 0:", next_state)
+            # if TRAINING_FOR_ALL == False:
+            #     # print("construct common state:", motion_transition_occur_flag)
+            #     # print("construct common state 0:", next_state)
 
-                def wmu_cam_rand():
-                    return random.randint(1, 1000)
+            #     def wmu_cam_rand():
+            #         return random.randint(1, 1000)
 
 
-                for samples in range(batch_size):
-                    #robot_trigger_times = random.randint(env.robot_trigger_times, env.robot_trigger_times + 100)
-                    robot_trigger_times = env.robot_trigger_times
-                    # for robot_trigger_times in range(1, 3000):
-                    t_transition_feature = state[0][:len(transition_feature)]
+            #     for samples in range(batch_size):
+            #         #robot_trigger_times = random.randint(env.robot_trigger_times, env.robot_trigger_times + 100)
+            #         robot_trigger_times = env.robot_trigger_times
+            #         # for robot_trigger_times in range(1, 3000):
+            #         t_transition_feature = state[0][:len(transition_feature)]
                     
-                    cons_wmu_times = wmu_cam_rand() # 1 - 200
+            #         cons_wmu_times = wmu_cam_rand() # 1 - 200
 
-                    t_battery_feature = [trigger_times_normalization(wmu_cam_times + cons_wmu_times)]
-                    t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
-                    t_robot_feature = [trigger_times_normalization(robot_trigger_times)]
-                    t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+            #         t_battery_feature = [trigger_times_normalization(wmu_cam_times + cons_wmu_times)]
+            #         t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+            #         t_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+            #         t_predicted_act_feature = state[0][-len(predicted_act_feature):]
 
-                    # print("t_transition_feature:", t_transition_feature)
-                    # print("t_battery_feature:", t_battery_feature)
-                    # print("t_current_activity_feature:", t_current_activity_feature)
-                    # print("t_robot_feature:", t_robot_feature)
+            #         # print("t_transition_feature:", t_transition_feature)
+            #         # print("t_battery_feature:", t_battery_feature)
+            #         # print("t_current_activity_feature:", t_current_activity_feature)
+            #         # print("t_robot_feature:", t_robot_feature)
                     
-                    new_state = list(t_transition_feature) + list(t_current_activity_feature) 
-                    new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
-                    # new_state = list(t_transition_feature) + list(t_current_activity_feature)
-                    new_state = new_state + location_feature
+            #         new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+            #         new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+            #         # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+            #         new_state = new_state + location_feature
 
-                    # #print("new state:", new_state)
-                    new_state = np.reshape(new_state, [1, state_size])
+            #         # #print("new state:", new_state)
+            #         new_state = np.reshape(new_state, [1, state_size])
                     
                     
-                    tn_battery_feature = [trigger_times_normalization(wmu_cam_times+ cons_wmu_times + 1)]
-                    tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
-                    new_next_state = transition_feature + current_activity_feature 
-                    new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
-                    #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
-                    #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                    #location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
-                    #location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
-                    #location_feature = list(location_feature)
-                    # p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
-                    # p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
+            #         tn_battery_feature = [trigger_times_normalization(wmu_cam_times+ cons_wmu_times + 1)]
+            #         tn_robot_feature = [trigger_times_normalization(robot_trigger_times)]
+            #         new_next_state = transition_feature + current_activity_feature 
+            #         new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+            #         #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+            #         #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+            #         #location_type, type_prob = get_location_type_by_activity_cnn(cur_time_str)
+            #         #location_feature = adl_location_feature_extractor(location_type) # [0, 0, 0, 0, 0, 1]
+            #         #location_feature = list(location_feature)
+            #         # p_activity_end = 1 - motion_adl_bayes_model.get_end_of_activity_prob_by_duration(activity_duration, current_activity)
+            #         # p_current_activity_duration_feature = activity_duration_feature_extractor(p_activity_end)
 
-                    new_next_state = new_next_state + location_feature
-                    new_next_state = np.reshape(new_next_state, [1, state_size])
+            #         new_next_state = new_next_state + location_feature
+            #         new_next_state = np.reshape(new_next_state, [1, state_size])
 
                     
-                    # todo update reward function
-                    # con_reward = construct_reward(0, current_activity, location_type)
-                    con_reward = reward
-                    # agent.remember(new_state, 0, con_reward, new_next_state, env.done)
-                    agent.remember(new_state, 0, con_reward, new_next_state, env.done)
+            #         # todo update reward function
+            #         # con_reward = construct_reward(0, current_activity, location_type)
+            #         con_reward = reward
+            #         # agent.remember(new_state, 0, con_reward, new_next_state, env.done)
+            #         agent.remember(new_state, 0, con_reward, new_next_state, env.done)
 
-                    if DEBUG:
-                        print("construct common 1-1 :", new_next_state, ' r:', con_reward)
+            #         if DEBUG:
+            #             print("construct common 1-1 :", new_next_state, ' r:', con_reward)
 
-                    cons_robot_times = wmu_cam_rand() # 1 - 200
-                    t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                    t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
-                    t_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times)]
-                    t_predicted_act_feature = state[0][-len(predicted_act_feature):]
+            #         cons_robot_times = wmu_cam_rand() # 1 - 200
+            #         t_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+            #         t_current_activity_feature = state[0][len(transition_feature):len(transition_feature)+len(current_activity_feature)]
+            #         t_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times)]
+            #         t_predicted_act_feature = state[0][-len(predicted_act_feature):]
 
-                    # print("t_transition_feature:", t_transition_feature)
-                    # print("t_battery_feature:", t_battery_feature)
-                    # print("t_current_activity_feature:", t_current_activity_feature)
-                    # print("t_robot_feature:", t_robot_feature)
+            #         # print("t_transition_feature:", t_transition_feature)
+            #         # print("t_battery_feature:", t_battery_feature)
+            #         # print("t_current_activity_feature:", t_current_activity_feature)
+            #         # print("t_robot_feature:", t_robot_feature)
                     
-                    new_state = list(t_transition_feature) + list(t_current_activity_feature) 
-                    new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
-                    # new_state = list(t_transition_feature) + list(t_current_activity_feature)
-                    new_state = new_state + location_feature
+            #         new_state = list(t_transition_feature) + list(t_current_activity_feature) 
+            #         new_state = list(t_transition_feature) + list(t_current_activity_feature) + list(t_robot_feature) + list(t_battery_feature)
+            #         # new_state = list(t_transition_feature) + list(t_current_activity_feature)
+            #         new_state = new_state + location_feature
 
-                    # #print("new state:", new_state)
-                    new_state = np.reshape(new_state, [1, state_size])
+            #         # #print("new state:", new_state)
+            #         new_state = np.reshape(new_state, [1, state_size])
 
-                    tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
-                    tn_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times + 1)]
-                    new_next_state = transition_feature + current_activity_feature 
-                    new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
-                    #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
-                    #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
-                    new_next_state = new_next_state + location_feature
+            #         tn_battery_feature = [trigger_times_normalization(wmu_cam_times)]
+            #         tn_robot_feature = [trigger_times_normalization(robot_trigger_times + cons_robot_times + 1)]
+            #         new_next_state = transition_feature + current_activity_feature 
+            #         new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature
+            #         #new_next_state = transition_feature + current_activity_feature + tn_robot_feature + tn_battery_feature + predicted_act_feature
+            #         #new_next_state = transition_feature + current_activity_feature + predicted_act_feature
+            #         new_next_state = new_next_state + location_feature
 
-                    new_next_state = np.reshape(new_next_state, [1, state_size])
+            #         new_next_state = np.reshape(new_next_state, [1, state_size])
 
-                    con_reward = reward
+            #         con_reward = reward
 
-                    agent.remember(new_state, 1, con_reward, new_next_state, env.done)
+            #         agent.remember(new_state, 1, con_reward, new_next_state, env.done)
 
-                    if DEBUG:
-                        print("construct common 1-2 :", new_next_state, ' r:', con_reward)
+            #         if DEBUG:
+            #             print("construct common 1-2 :", new_next_state, ' r:', con_reward)
 
         # agent.remember(state, action, reward, next_state, env.done)    
 

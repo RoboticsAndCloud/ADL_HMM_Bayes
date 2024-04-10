@@ -1,0 +1,90 @@
+
+(venv3.8_rl_pytorch) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model$ cat dqn_res_v8/test.0410_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true_2.txt |grep epi
+episode: 0/9, episode_reward: -8799.485206666699, e: 0.68, end time 2009-12-11 22:51:45.800000
+episode: 1/9, episode_reward: -5962.1147106672925, e: 0.46, end time 2009-12-11 22:51:45.800000
+episode: 2/9, episode_reward: -3341.9217086673566, e: 0.31, end time 2009-12-11 22:51:45
+episode: 3/9, episode_reward: -2038.6806866666468, e: 0.21, end time 2009-12-11 22:51:45.200000
+episode: 4/9, episode_reward: -1404.990996000011, e: 0.14, end time 2009-12-11 22:51:46.200000
+episode: 5/9, episode_reward: -678.4099999999966, e: 0.09, end time 2009-12-11 22:51:44.400000
+episode: 6/9, episode_reward: -567.8119999999955, e: 0.06, end time 2009-12-11 22:51:45.200000
+episode: 7/9, episode_reward: -204.79199999999133, e: 0.039, end time 2009-12-11 22:51:45.800000
+episode: 8/9, episode_reward: -80.02000000000476, e: 0.026, end time 2009-12-11 22:51:45.700000
+episode: 9/9, episode_reward: -77.7120000000061, e: 0.017, end time 2009-12-11 22:51:45
+episode: 0/9, episode_reward: 63.58199999999945, e: 0.014, end time 2009-12-11 22:51:44.500000
+episode: 1/9, episode_reward: 79.87800000000014, e: 0.012, end time 2009-12-11 22:51:45
+episode: 2/9, episode_reward: 102.65800000000044, e: 0.01, end time 2009-12-11 22:51:45.100000
+
+
+
+total_wmu_cam_trigger_times: [5546, 4371, 2939, 2191, 1882, 1112, 1432, 604, 530, 760]
+total_wmu_mic_trigger_times: [3762, 2612, 1774, 1167, 846, 536, 362, 266, 167, 95]
+total_wmu_trigger_times: [1828, 1347, 883, 617, 424, 261, 191, 142, 80, 45]
+total_robot_mic_trigger_times: [6302, 6732, 6503, 3134, 2504, 1617, 1346, 1852, 1550, 1762]
+total_robot_cam_trigger_times: [4142, 3661, 2325, 1734, 1225, 686, 489, 309, 255, 192]
+total_robot_trigger_times: [2334, 1857, 1141, 831, 489, 430, 312, 188, 187, 143]
+total_privacy_level1_times: [1455, 1369, 680, 435, 324, 216, 151, 96, 67, 52]
+total_privacy_level2_times: [10416, 9778, 8780, 4768, 3761, 2192, 1733, 2142, 1717, 1853]
+total_privacy_level1_robot_vision_times: [432, 321, 203, 175, 99, 66, 40, 24, 16, 13]
+total_privacy_level1_robot_sound_times: [751, 870, 398, 237, 174, 133, 92, 56, 38, 35]
+total_privacy_level1_wmu_sound_times: [474, 316, 189, 125, 105, 57, 43, 24, 20, 10]
+total_privacy_level2_robot_vision_times: [3710, 3340, 2122, 1559, 1126, 620, 449, 285, 239, 179]
+total_privacy_level2_robot_sound_times: [5551, 5862, 6105, 2897, 2330, 1484, 1254, 1796, 1512, 1727]
+total_privacy_level2_wmu_sound_times: [3287, 2295, 1584, 1041, 740, 478, 318, 241, 146, 84]
+
+
+total_wmu_cam_trigger_times: [346, 409, 324]
+total_wmu_mic_trigger_times: [83, 72, 56]
+total_wmu_trigger_times: [41, 34, 28]
+total_robot_mic_trigger_times: [1031, 628, 718]
+total_robot_cam_trigger_times: [260, 134, 230]
+total_robot_trigger_times: [219, 111, 207]
+total_privacy_level1_times: [40, 33, 37]
+total_privacy_level2_times: [1114, 689, 759]
+total_privacy_level1_robot_vision_times: [6, 6, 8]
+total_privacy_level1_robot_sound_times: [31, 23, 27]
+total_privacy_level1_wmu_sound_times: [8, 7, 6]
+total_privacy_level2_robot_vision_times: [254, 128, 222]
+total_privacy_level2_robot_sound_times: [1000, 605, 691]
+total_privacy_level2_wmu_sound_times: [74, 64, 49]
+
+
+
+
+
+
+(venv3.8_rl_pytorch) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model$ cat dqn_res_v8/test.0410_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall
+_true_2_test.txt |grep total_
+total_wmu_cam_trigger_times: [312, 312]
+total_wmu_mic_trigger_times: [85, 85]
+total_wmu_trigger_times: [75]
+total_robot_mic_trigger_times: [285]
+total_robot_cam_trigger_times: [92]
+total_robot_trigger_times: [86, 86]
+total_privacy_level1_times: [42]
+total_privacy_level2_times: [333]
+total_privacy_level1_robot_vision_times: [2]
+total_privacy_level1_robot_sound_times: [22]
+total_privacy_level1_wmu_sound_times: [19]
+total_privacy_level2_robot_vision_times: [90]
+total_privacy_level2_robot_sound_times: [263]
+total_privacy_level2_wmu_sound_times: [65]
+
+
+
+##########################################
+Total_activity_cnt 48
+Hit_activity_check_times: 36
+Miss_activity_check_times: 9
+Miss activity list:
+Miss activity ratio: 0.2
+Activity detection ratio: 0.75
+Master_Bathroom 2009-12-11 09:12:05     2009-12-11 09:13:11     1.1
+Leave_Home      2009-12-11 10:53:06     2009-12-11 10:53:19     0.21666666666666667
+Master_Bedroom_Activity 2009-12-11 13:22:28     2009-12-11 13:31:55     9.45
+Master_Bathroom 2009-12-11 13:22:37     2009-12-11 13:31:43     9.1
+Master_Bedroom_Activity 2009-12-11 13:56:52     2009-12-11 13:57:10     0.3
+Kitchen_Activity        2009-12-11 13:57:17     2009-12-11 13:57:42     0.4166666666666667
+Desk_Activity   2009-12-11 14:35:32     2009-12-11 14:39:18     3.7666666666666666
+Read    2009-12-11 15:30:36     2009-12-11 16:05:49     35.21666666666667
+Master_Bathroom 2009-12-11 22:46:57     2009-12-11 22:47:48     0.85
+

@@ -24,7 +24,13 @@ from tensorflow.keras import backend as K
 #session = tf.compat.v1.Session(config=config)
 #K.set_session(session)
 
-MODEL_SAVED_PATH = 'ascc_rl_dqn-saved-model'
+# MODEL_SAVED_PATH = 'ascc_rl_dqn-saved-model'
+# MODEL_SAVED_PATH = 'ascc_rl_dqn-saved-model_basicmodel_0815'
+# MODEL_SAVED_PATH = 'ascc_rl_dqn-saved-model_bath_bed_living'
+
+
+MODEL_SAVED_PATH = 'ascc_rl_dql_privacy_saved-model'
+# MODEL_SAVED_PATH = "ascc_rl_dql_privacy_saved-model.basic_10_episodes_true_0407"
 
 # when to synchronize the two network
 UPDATE_TAU = 400
@@ -45,7 +51,7 @@ class DQNAgent:
     def __init__(self,
                  state_space, 
                  action_space, 
-                 episodes=500, epsilon = 1.0, memory_size = 512):
+                 episodes=500, epsilon = 1.0, memory_size = 512*4):
         """DQN Agent on CartPole-v0 environment
 
         Arguments:
@@ -58,6 +64,7 @@ class DQNAgent:
         # experience buffer
         self.memory = []
         self.memory_transition = []
+        self.memory_transition_sit_stand = []
         self.memory_size = memory_size
 
         # discount rate
@@ -67,7 +74,10 @@ class DQNAgent:
         self.epsilon = epsilon
         # iteratively applying decay til 
         # 10% exploration/90% exploitation
+
+        # try: set this to 0.01
         self.epsilon_min = 0.001
+        
         self.epsilon_decay = self.epsilon_min / self.epsilon
         self.epsilon_decay = self.epsilon_decay ** \
                              (1. / float(episodes))
@@ -122,7 +132,7 @@ class DQNAgent:
             q_model (Model): DQN
         """
         inputs = Input(shape=(n_inputs, ), name='state')
-        x = Dense(128, activation='relu')(inputs)
+        # x = Dense(128, activation='relu')(inputs)
         #x = Dense(64, activation='relu')(x)
         #x = Dense(64, activation='relu')(x)
         #x = Dense(64, activation='relu')(x)
@@ -131,22 +141,48 @@ class DQNAgent:
         #x = Dropout(0.2)(x)
         x = Dense(n_outputs,
                   activation='linear', 
-                  name='action')(x)
+                  name='action')(inputs)
+
         q_model = Model(inputs, x)
         q_model.summary()
         return q_model
 
+    # def build_model(self, n_inputs, n_outputs):
+    #     """Q Network is 256-256-256 MLP
+
+    #     Arguments:
+    #         n_inputs (int): input dim
+    #         n_outputs (int): output dim
+
+    #     Return:
+    #         q_model (Model): DQN
+    #     """
+    #     inputs = Input(shape=(n_inputs, ), name='state')
+    #     x = Dense(128, activation='relu')(inputs)
+    #     #x = Dense(64, activation='relu')(x)
+    #     #x = Dense(64, activation='relu')(x)
+    #     #x = Dense(64, activation='relu')(x)
+    #   #  x = Dense(64, activation='relu')(x)
+    #   #  x = Dense(64, activation='relu')(x)
+    #     #x = Dropout(0.2)(x)
+    #     x = Dense(n_outputs,
+    #               activation='linear', 
+    #               name='action')(x)
+
+    #     q_model = Model(inputs, x)
+    #     q_model.summary()
+    #     return q_model
 
     def save_weights(self):
         """save Q Network params to a file"""
         self.q_model.save_weights(self.weights_file)
         self.q_model.save(MODEL_SAVED_PATH)
 
-    def load_weights(self):
+    def load_weights(self, model_path = MODEL_SAVED_PATH):
         """save Q Network params to a file"""
         # self.q_model.load_weights(self.weights_file)
         from keras.models import load_model
-        self.q_model = load_model(MODEL_SAVED_PATH)
+        self.q_model = load_model(model_path)
         self.target_q_model.set_weights(self.q_model.get_weights())
         self.q_model.summary()
         print('load weights')
@@ -170,7 +206,7 @@ class DQNAgent:
         # exploit
         q_values = self.q_model.predict(state)
         # select the action with max Q-value
-        print("q_values:", q_values)
+        # print("q_values:", q_values)
         action = np.argmax(q_values[0])
         return action
     
@@ -221,6 +257,23 @@ class DQNAgent:
             self.memory_transition = self.memory_transition[index:]
 
 
+    def remember_transition_sit_stand(self, state, action, reward, next_state, done):
+        """store experiences in the replay buffer
+        Arguments:
+            state (tensor): env state
+            action (tensor): agent action
+            reward (float): reward received after executing
+                action on state
+            next_state (tensor): next state
+        """
+        item = (state, action, reward, next_state, done)
+        self.memory_transition_sit_stand.append(item)
+
+        if len(self.memory_transition_sit_stand) > self.memory_size:
+            index = int(self.memory_size/2)
+            self.memory_transition_sit_stand = self.memory_transition_sit_stand[index:]
+
+
     def get_target_q_value2(self, next_state, reward):
         """compute Q_max
            Use of target Q Network solves the 
@@ -244,7 +297,9 @@ class DQNAgent:
 
         # Q_max = reward + gamma * Q_max
         q_value *= self.gamma
+        # print('====q value {} reward {}'.format(q_value, reward))
         q_value += reward
+        q_value = reward # another way to update the reward, multi arm bandit
         return q_value
 
     def get_target_q_value(self, next_state, reward):
@@ -276,6 +331,61 @@ class DQNAgent:
         q_value += reward
         return q_value
 
+    def replay_sit_stand(self, batch_size, transition=False):
+        """experience replay addresses the correlation issue 
+            between samples
+        Arguments:
+            batch_size (int): replay buffer batch 
+                sample size
+        """
+        # sars = state, action, reward, state' (next_state)
+        #print('len memory:', len(self.memory), ' ', len(self.memory_transition))
+        if len(self.memory_transition_sit_stand) < batch_size:
+            return
+        
+        state_batch, q_values_batch = [], []
+
+        sars_batch = random.sample(self.memory_transition_sit_stand, batch_size)
+
+
+        # fixme: for speedup, this could be done on the tensor level
+        # but easier to understand using a loop
+        for state, action, reward, next_state, done in sars_batch:
+            print('in agent: state:', state)
+            tensor_state=tf.convert_to_tensor(state)
+            q_values = self.q_model(tensor_state).numpy()
+
+            # policy prediction for a given state
+            #q_values = self.q_model.predict(state)
+            
+            # get Q_max
+            q_value = self.get_target_q_value2(next_state, reward)
+
+            # correction on the Q value for the action used
+            q_values[0][action] = reward if done else q_value
+
+            # collect batch state-q_value mapping
+            state_batch.append(state[0])
+            q_values_batch.append(q_values[0])
+            #K.clear_session()
+
+        # train the Q-network
+        self.q_model.fit(np.array(state_batch),
+                         np.array(q_values_batch),
+                         batch_size=batch_size,
+                         epochs=1,
+                         verbose=0)
+
+        # update exploration-exploitation probability
+        self.update_epsilon()
+
+        # copy new params on old target after 
+        # every 10 or 5 training updates
+        if self.replay_counter % UPDATE_TAU == 0:
+            self.update_weights()
+
+        # self.replay_counter += 1
+
 
     def replay2(self, batch_size, transition=False):
         """experience replay addresses the correlation issue 
@@ -297,7 +407,7 @@ class DQNAgent:
         # fixme: for speedup, this could be done on the tensor level
         # but easier to understand using a loop
         for state, action, reward, next_state, done in sars_batch:
-
+            print('in agent: state:', state)
             tensor_state=tf.convert_to_tensor(state)
             q_values = self.q_model(tensor_state).numpy()
 
@@ -331,6 +441,9 @@ class DQNAgent:
             self.update_weights()
 
         self.replay_counter += 1
+
+        # self.replay_sit_stand(batch_size)
+
 
     def replay(self, batch_size):
         """experience replay addresses the correlation issue 
