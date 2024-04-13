@@ -148,6 +148,9 @@ total_privacy_level2_wmu_sound_times: [58]
 
 
 
+
+
+
 len: 48
 ##########################################
 Total_activity_cnt 48
@@ -166,3 +169,22 @@ Desk_Activity   2009-12-11 14:35:32     2009-12-11 14:39:18     3.76666666666666
 Read    2009-12-11 15:30:36     2009-12-11 16:05:49     35.21666666666667
 Guest_Bathroom  2009-12-11 20:49:02     2009-12-11 20:49:47     0.75
 Master_Bathroom 2009-12-11 22:46:57     2009-12-11 22:47:48     0.85
+
+
+#########################level1 all locations, no level2 ##############################
+dqn_res_v8
+test.0412_p_0.6_1layer_Transition2_level1all_energy_0.35_p_0.6.txt
+total_wmu_cam_trigger_times: [314, 340, 305, 309, 299, 312, 299, 309, 423, 298]
+total_wmu_mic_trigger_times: [17, 16, 14, 14, 11, 13, 8, 6, 6, 11]
+total_wmu_trigger_times: [9, 10, 7, 7, 6, 10, 1, 4, 4, 5]
+total_robot_mic_trigger_times: [172, 158, 166, 163, 161, 161, 146, 154, 152, 151]
+total_robot_cam_trigger_times: [11, 18, 14, 13, 14, 9, 5, 6, 9, 5]
+total_robot_trigger_times: [4, 8, 9, 8, 5, 6, 2, 2, 5, 2]
+total_privacy_level1_times: [174, 167, 170, 162, 162, 163, 147, 153, 152, 154]
+total_privacy_level2_times: [21, 16, 14, 19, 18, 13, 9, 10, 9, 10]
+total_privacy_level1_robot_vision_times: [10, 13, 11, 8, 10, 6, 5, 5, 8, 5]
+total_privacy_level1_robot_sound_times: [158, 144, 156, 149, 149, 150, 139, 146, 144, 143]
+total_privacy_level1_wmu_sound_times: [10, 15, 11, 10, 7, 10, 5, 4, 5, 8]
+total_privacy_level2_robot_vision_times: [1, 5, 3, 5, 4, 3, 0, 1, 1, 0]
+total_privacy_level2_robot_sound_times: [14, 14, 10, 14, 12, 11, 7, 8, 8, 8]
+total_privacy_level2_wmu_sound_times: [6, 0, 2, 3, 3, 2, 2, 1, 0, 2]
