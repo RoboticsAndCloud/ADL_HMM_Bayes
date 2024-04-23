@@ -8,6 +8,11 @@
 
 
 
+python res_analysis_dqn.py 
+python rl_adl_dqn_main_test_privacy.py >> test.0406_test.txt
+
+
+
 (venv3.8_rl_pytorch) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model$ cat dqn_res_v8/test.0410_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true_2.txt |grep epi
 episode: 0/9, episode_reward: -8799.485206666699, e: 0.68, end time 2009-12-11 22:51:45.800000
 episode: 1/9, episode_reward: -5962.1147106672925, e: 0.46, end time 2009-12-11 22:51:45.800000
@@ -296,6 +301,37 @@ Master_Bathroom 2009-12-11 22:46:57     2009-12-11 22:47:48     0.85
 #####################################new training###########################33
 
 cat test.0421_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true.txt |grep epi
+# cat test.0421_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true.txt |grep epi | awk '{print $4}'
+# total_wmu_cam_trigger_times: [5647, 4044, 2863, 2071, 2111, 1009, 784, 753, 498, 753]
+# total_wmu_mic_trigger_times: [3709, 2653, 1760, 1217, 822, 526, 354, 251, 165, 100]
+# total_wmu_trigger_times: [1826, 1384, 887, 587, 412, 268, 187, 124, 80, 59]
+# total_robot_mic_trigger_times: [6623, 6723, 5907, 5516, 5325, 4295, 4088, 3866, 3198, 3049]
+# total_robot_cam_trigger_times: [3770, 2557, 1767, 1281, 838, 1149, 399, 586, 206, 154]
+# total_robot_trigger_times: [1941, 1308, 875, 682, 439, 310, 220, 179, 128, 100]
+# total_privacy_level1_times: [1347, 933, 599, 445, 310, 195, 140, 105, 67, 51]
+# total_privacy_level2_times: [10813, 9691, 7959, 6886, 6235, 5464, 4480, 4418, 3373, 3151]
+# total_privacy_level1_robot_vision_times: [440, 300, 186, 142, 91, 54, 46, 25, 18, 10]
+# total_privacy_level1_robot_sound_times: [665, 456, 303, 226, 160, 104, 71, 64, 41, 32]
+# total_privacy_level1_wmu_sound_times: [484, 318, 213, 151, 102, 65, 43, 32, 17, 13]
+# total_privacy_level2_robot_vision_times: [3330, 2257, 1581, 1139, 747, 1095, 353, 561, 188, 144]
+# total_privacy_level2_robot_sound_times: [5958, 6267, 5604, 5290, 5165, 4191, 4017, 3802, 3157, 3017]
+# total_privacy_level2_wmu_sound_times: [3224, 2334, 1546, 1065, 719, 460, 310, 218, 147, 86]
+
+
+# total_wmu_cam_trigger_times: [345, 485, 309, 302, 415, 280, 279, 264, 262, 255]
+# total_wmu_mic_trigger_times: [82, 68, 64, 49, 30, 27, 28, 24, 17, 18]
+# total_wmu_trigger_times: [44, 31, 34, 23, 17, 13, 15, 13, 10, 8]
+# total_robot_mic_trigger_times: [3212, 2792, 2492, 2028, 1743, 1628, 818, 1475, 305, 297]
+# total_robot_cam_trigger_times: [164, 107, 110, 110, 92, 99, 79, 71, 76, 74]
+# total_robot_trigger_times: [91, 70, 80, 84, 74, 86, 64, 64, 67, 63]
+# total_privacy_level1_times: [39, 36, 36, 35, 26, 32, 23, 24, 22, 24]
+# total_privacy_level2_times: [3327, 2860, 2549, 2067, 1764, 1635, 837, 1481, 308, 301]
+# total_privacy_level1_robot_vision_times: [9, 7, 8, 8, 3, 6, 1, 1, 1, 1]
+# total_privacy_level1_robot_sound_times: [26, 23, 26, 27, 22, 27, 19, 20, 19, 19]
+# total_privacy_level1_wmu_sound_times: [8, 8, 5, 4, 2, 3, 3, 3, 2, 4]
+# total_privacy_level2_robot_vision_times: [155, 100, 102, 102, 89, 93, 78, 70, 75, 73]
+# total_privacy_level2_robot_sound_times: [3186, 2769, 2466, 2001, 1721, 1601, 799, 1455, 286, 278]
+# total_privacy_level2_wmu_sound_times: [73, 59, 58, 44, 27, 23, 24, 20, 14, 13]
 
 cat test.0421_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true.txt |grep cnt |grep motion |grep transition
 motion_transition_occur_cnt: 236
@@ -307,4 +343,136 @@ stand motion_transition_occur_cnt: 54
  python rl_adl_dqn_main_test_privacy.py >> test.0406_test.txt
 
 
+
+
+
+############################
+For real-time test
+
+##pip3 install flask
+##pip3 install flask_socketio
+
+# offline dataset of the day 2009-12-11
+/home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES_V2/ADL_HMM_BAYES/Ascc_Dataset_0819//Image/
+# ground_truth_activity
+/home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model/ground_truth_dict_dataset0819.py
+
+# Online daily pattern 
+/home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/data
+# Floor map
+milan.png
+
+# Watchdataset
+/home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/room_classifier/watch_dataset/Image
+
+
+# simulated user
+/home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model/rl_env_ascc_user_simulation.py
+
+
+Env requirements:
+source  ~/LF_Workspace/venv3.7_energy/bin/activate
+
+0) Launch adl_web_mq_server
+cd /home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES
+python adl_web_mq_server.py
+
+1) Launch server for receiving the data from WMU
+cd /home/ascc/LF_Workspace/Bayes_model/Product_ADL/ADL_HMM_BAYES/
+python adl_server_main_node.py
+
+2) Launch recognition model
+2.1 Launch room sound recognition cnn algorithm 
+cd /home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES/room_sound
+cd /home/ascc/LF_Workspace/Bayes_model/Product_ADL/ADL_HMM_BAYES/room_sound
+python ascc_room_sound_activity_test.py 
+
+2.2 Launch motion recognition cnn algorithm
+cd /home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES/room_motion_activity
+cd /home/ascc/LF_Workspace/Bayes_model/Product_ADL/ADL_HMM_BAYES/room_motion_activity
+python ascc_room_motion_activity_test.py 
+
+2.3 Launch yolo object detection
+cd /home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES_V2/ADL_HMM_BAYES/room_classifier/ImageProcess
+cd /home/ascc/LF_Workspace/Bayes_model/Product_ADL/ADL_HMM_BAYES/room_classifier/ImageProcess
+python food_yolo_opencv.py --config yolov3.cfg --weights  yolov3.weights --class yolov3.txt
+
+2.4 Launch room recogniton 
+cd /home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES_V2/ADL_HMM_BAYES/room_classifier/
+cd /home/ascc/LF_Workspace/Bayes_model/Product_ADL/ADL_HMM_BAYES/room_classifier
+python ascc_room_activity_test.py
+
+3) Launch motion adl main 
+cd /home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES
+cd /home/ascc/LF_Workspace/Bayes_model/Product_ADL/ADL_HMM_BAYES/
+python motion_adl_main.py
+
+
+4) WMU
+python3 adl_server_main_wmu.py
+python3 test_adl_server_main_wmu.py
+
+5)Stop the motion_adl_main and get final result
+http://127.0.0.1:5000/stop
+
+
+# watch rl based test
+source ~/LF_Workspace/venv3.8_rl_pytorch/bin/activate
+cd /home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model
+python rl_real_test_dqn_privacy.py
+
+# check the adl_env_client_lib and adl_server_main_node, big endian for network communication
+
+
+#####################
+Test flask_socketio
+cd socketio_demo
+python test_socketio_server.py
+python test_socketio_cli.py
+
+http://127.0.0.1:5000/push
+
+
+python adl_web_mq_server.py
+curl -i -H "Content-Type: application/json" -X POST -d '{"userId":"1", "username": "fizz bizz"}' http://127.0.0.1:5000/notice
+
+
+
+
+main : simulation using online dataset Milan
+real_env_v2: test using offline dataset
+real_time: real-time test
+
+
+
+################01/08/2024#####################
+
+Env requirements:
+source  ~/LF_Workspace/venv3.7_energy/bin/activate
+
+
+(venv3.7_energy) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES$ python adl_web_mq_server.py
+
+
+(venv3.7_energy) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES$ python adl_server_main_node.py
+
+(venv3.7_energy) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/room_classifier$ python ascc_robot_room_activity_test.py 
+
+
+Image Reconition for WMU images
+(venv3.7_energy) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/room_classifier$ python ascc_room_activity_test.py 
+
+
+
+
+Test WMU
+(venv3.7_energy) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/adl_wmu$ python test_adl_server_main_wmu.py 
+
+Robot:
+python2.7 adl_server_main_companion_robot.py 
+
+
+RL model:
+source  ~/LF_Workspace/venv3.8_rl_pytorch/bin/activate
+(venv3.8_rl_pytorch) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model$ python rl_real_test_dqn.py
 
