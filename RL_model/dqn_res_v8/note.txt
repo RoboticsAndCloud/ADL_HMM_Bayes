@@ -1,3 +1,12 @@
+# offline dataset of the day 2009-12-11
+/home/ascc/LF_Workspace/Bayes_model/ADL_HMM_BAYES_V2/ADL_HMM_BAYES/Ascc_Dataset_0819//Image/
+
+
+
+# Watchdataset
+/home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/room_classifier/watch_dataset/Image
+
+
 
 (venv3.8_rl_pytorch) (base) ascc@ascc-XPS-8940:~/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/RL_model$ cat dqn_res_v8/test.0410_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true_2.txt |grep epi
 episode: 0/9, episode_reward: -8799.485206666699, e: 0.68, end time 2009-12-11 22:51:45.800000
@@ -49,6 +58,7 @@ total_privacy_level2_wmu_sound_times: [74, 64, 49]
 
 
 # new 10 iteration:
+cat dqn_res_v8/test.0410_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true_3withtriggertimes.txt |grep total_
 
 episode: 0/9, episode_reward: 124.13799999999893, e: 0.0087, end time 2009-12-11 22:51:44.700000
 episode: 1/9, episode_reward: 158.2179999999993, e: 0.0076, end time 2009-12-11 22:51:44
@@ -280,3 +290,13 @@ Kitchen_Activity        2009-12-11 13:57:17     2009-12-11 13:57:42     0.416666
 Desk_Activity   2009-12-11 14:35:32     2009-12-11 14:39:18     3.7666666666666666
 Read    2009-12-11 15:30:36     2009-12-11 16:05:49     35.21666666666667
 Master_Bathroom 2009-12-11 22:46:57     2009-12-11 22:47:48     0.85
+
+
+
+#####################################new training###########################33
+
+cat test.0421_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true.txt |grep epi
+
+
+
+ python rl_adl_dqn_main_test_privacy.py >> test.0406_test.txt
