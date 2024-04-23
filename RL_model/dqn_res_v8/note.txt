@@ -297,6 +297,14 @@ Master_Bathroom 2009-12-11 22:46:57     2009-12-11 22:47:48     0.85
 
 cat test.0421_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true.txt |grep epi
 
+cat test.0421_p_0.6_1layer_Transition2_level1_0.2_nositting_energy_0.35_acc_0.05_0.6_trianall_true.txt |grep cnt |grep motion |grep transition
+motion_transition_occur_cnt: 236
+sit motion_transition_occur_cnt: 52
+stand motion_transition_occur_cnt: 54
+
 
 
  python rl_adl_dqn_main_test_privacy.py >> test.0406_test.txt
+
+
+
