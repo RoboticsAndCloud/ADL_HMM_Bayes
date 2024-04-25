@@ -191,13 +191,15 @@ ACTION_INTERVAL_DICT = {
 
 
 MAX_LOCATION_CLASS = 6
-PRIVACY_LOCATION_LIST_BASIC = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM]
+# PRIVACY_LOCATION_LIST_BASIC = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM]
 # PRIVACY_LOCATION_LIST_BASIC = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM, constants.LOCATION_LIVINGROOM]
 # PRIVACY_LOCATION_LIST_BASIC = [constants.LOCATION_BEDROOM]
 
 PRIVACY_LOCATION_LIST = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM]
 # PRIVACY_LOCATION_LIST = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM, constants.LOCATION_KITCHEN]
 # PRIVACY_LOCATION_LIST = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM, constants.LOCATION_LIVINGROOM]
+# PRIVACY_LOCATION_LIST = [constants.LOCATION_BEDROOM, constants.LOCATION_BATHROOM, constants.LOCATION_LIVINGROOM, 
+#                          constants.LOCATION_DININGROOM, constants.LOCATION_KITCHEN, constants.LOCATION_DOOR, constants.LOCATION_LOBBY]
 
 # PRIVACY_LOCATION_LIST = [constants.LOCATION_BATHROOM]
 
@@ -426,7 +428,7 @@ BATTERY_LIFE = 5000 * 3600  # mAh * 3600
 
 EXPECTED_TOLERANCE = 1  # tolerance in seconds, if the predict activity time is around $EXPECTED_TOLERANCE, the predict activity is good
 
-ROBOT_WAIT_DURATION = 20 # wait the robot to move to the target location due to the speed of the moblie base
+ROBOT_WAIT_DURATION = 10 # wait the robot to move to the target location due to the speed of the moblie base
 
 def merge_dicts(*dict_args):
     """
@@ -643,6 +645,9 @@ class EnvASCC():
         self.privacy_occur_cnt_level2_robot_sound = 0
         self.privacy_occur_cnt_level2_wmu_sound = 0
 
+        self.privacy_occur_cnt_level1 = 0
+        self.privacy_occur_cnt_level2 = 0
+
 
         next_state_ = [train_running_time / STATE_TIME_TRANS, (self.activity / 100)]
         # next_state_ = [train_running_time, self.initial_state, self.residual_power]
@@ -673,62 +678,89 @@ class EnvASCC():
         print("CAMS-DQN: Action:", RL_ACTION_DICT[p_action])
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 
-        # import adl_env_client_lib
-        # import adl_type_constants
-        # try:
-        #     if RL_ACTION_DICT[p_action] == WMU_fusion or RL_ACTION_DICT[p_action] == Robot_audio_vision or RL_ACTION_DICT[p_action] == Robot_audio_WMU_vision:
+        import adl_env_client_lib
+        import adl_type_constants
 
-        #         adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
-        #                                                     adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_FUSION)
+        robot_disable = False
 
-        #         # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
-        #         #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
-                
-        #         # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
-        #         #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_FUSION)
-                
-        #         # send cmd to the robots
-        #         if RL_ACTION_DICT[p_action] == Robot_audio_vision:
-        #             time.sleep(ROBOT_WAIT_DURATION)
-        #             adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
-        #                                                     adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_FUSION)
-        #         #self.fusion_check_times += 1
-        #         # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
-        #         #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
-        #         # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
-        #         #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
 
-        #     elif RL_ACTION_DICT[p_action] == Nothing:
-        #         adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
-        #                                                         adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_MOTION)
-        #         #self.motion_check_times += 1
-        #     elif RL_ACTION_DICT[p_action] == WMU_vision or RL_ACTION_DICT[p_action] == Robot_vision:
-        #         if RL_ACTION_DICT[p_action] == WMU_vision:
-        #             adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
-        #                                                     adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
-                
-        #         # send cmd to the robots
-        #         if RL_ACTION_DICT[p_action] == Robot_audio_vision or RL_ACTION_DICT[p_action] == Robot_vision:
-        #             time.sleep(ROBOT_WAIT_DURATION)
-        #             adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
-        #                                                     adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
-    
-        #     elif RL_ACTION_DICT[p_action] == WMU_audio or RL_ACTION_DICT[p_action] == Robot_audio:
-        #         adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
-        #                                                     adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
-                
-        #         # send cmd to the robots
-        #         if RL_ACTION_DICT[p_action] == Robot_audio:
-        #             time.sleep(ROBOT_WAIT_DURATION)
-        #             adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
-        #                                                     adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
         
-        # except Exception as e:
-        #     print("Got error when Send cmd to WMU, err:", e, " p_action:", p_action, ' ip2:', adl_type_constants.WMU_IPRECEIVE)
-        #     #logging.warn('Got error when Send cmd to WMU')
-        #     #logging.warn(e)
-        #     # return # the watch app may crush
-        #     return '', '', '', False
+        try:
+                    
+            if RL_ACTION_DICT[p_action] == WMU_fusion or RL_ACTION_DICT[p_action] == Robot_audio_vision or RL_ACTION_DICT[p_action] == Robot_audio_WMU_vision:
+
+                # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                            # adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_FUSION)
+                
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
+                time.sleep(0.5)
+
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_MOTION)
+                time.sleep(0.5)
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
+                
+                # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
+                
+                # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
+                #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_FUSION)
+                
+                # send cmd to the robots
+                if RL_ACTION_DICT[p_action] == Robot_audio_vision:
+                    time.sleep(ROBOT_WAIT_DURATION)
+                    if not robot_disable:
+                        adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_FUSION)
+                #self.fusion_check_times += 1
+                # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
+                #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
+                # adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
+                #                                             adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
+
+            elif RL_ACTION_DICT[p_action] == Nothing:
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                                adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_MOTION)
+                #self.motion_check_times += 1
+            elif RL_ACTION_DICT[p_action] == WMU_vision or RL_ACTION_DICT[p_action] == Robot_vision:
+                if RL_ACTION_DICT[p_action] == WMU_vision:
+                    adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
+                    
+
+                
+                # send cmd to the robots
+                if RL_ACTION_DICT[p_action] == Robot_audio_vision or RL_ACTION_DICT[p_action] == Robot_vision:
+                    time.sleep(ROBOT_WAIT_DURATION)
+                    if not robot_disable:
+                        adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_IMAGE)
+
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                                adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_MOTION)
+    
+            elif RL_ACTION_DICT[p_action] == WMU_audio or RL_ACTION_DICT[p_action] == Robot_audio:
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
+                
+                # send cmd to the robots
+                if RL_ACTION_DICT[p_action] == Robot_audio:
+                    time.sleep(ROBOT_WAIT_DURATION)
+                    if not robot_disable:
+                        adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_COMPANION_ROBOT_IPRECEIVE, adl_type_constants.WMU_COMPANION_ROBOT_RECEIVE_PORT,
+                                                            adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_AUDIO)
+                    
+                adl_env_client_lib.cmd_mode_sending_handler(adl_type_constants.WMU_IPRECEIVE, adl_type_constants.WMU_RECEIVE_PORT,
+                                                                adl_type_constants.STATE_ENV_ACTIVITY_CMD_TAKING_MOTION)
+        
+        except Exception as e:
+            print("Got error when Send cmd to WMU, err:", e, " p_action:", p_action, ' ip2:', adl_type_constants.WMU_IPRECEIVE)
+            #logging.warn('Got error when Send cmd to WMU')
+            #logging.warn(e)
+            # return # the watch app may crush
+            return '', '', '', False
 
         
         
@@ -792,10 +824,10 @@ class EnvASCC():
             # self.done_energy_cost = self.done_energy_cost + sensors_power_consumption
             # self.done_total_time_cost = self.done_total_time_cost + sensors_time_cost
 
-        if self.wmu_cam_times > MAX_TRIGGER_TIMES or self.robot_cam_trigger_times > MAX_TRIGGER_TIMES:
-            done = True #  Battery is dead
-            self.done = True
-            # print("Done = True, self.residual_power: ", self.residual_power)
+        # if self.wmu_cam_times > MAX_TRIGGER_TIMES or self.robot_cam_trigger_times > MAX_TRIGGER_TIMES:
+        #     done = True #  Battery is dead
+        #     self.done = True
+        #     # print("Done = True, self.residual_power: ", self.residual_power)
         
 
 
@@ -832,7 +864,7 @@ class EnvASCC():
 
         self.res_hit_plus_miss_event_dict = merge_dicts(self.res_hit_event_dict, self.res_random_event_dict)
 
-
+        # TODO: how to get the accurate privacy level violation times
         if need_recollect_data == False:
             if WMU_audio in RL_ACTION_DICT[action]:
                 self.wmu_mic_times += 1
@@ -922,51 +954,66 @@ class EnvASCC():
 
         return acc
 
-    def get_reward_privacy(self, action, activity, location=''):
+    def get_reward_privacy(self, action, activity, location='', flag=False):
 
         reward = 0
         print('location checking:', location)
-        level1 = 0.8
-        level2 = 0.2
+        level1 = 1  # 0.8 
+        level2 = 0.2 # 0.5  # change the weights based on the different scenarios
 
-        vision_p = 0.8
-        audio_p = 0.2
+        vision_p = 1  # 0.8
+        audio_p = 0.5 # 0.5  # change the weights based on the different scenarios
 
         # level 1, 0.8
 
         if location != '' and location in PRIVACY_LOCATION_LIST:
+            privacy_flag = False
             if Robot_vision in RL_ACTION_DICT[action]:
+                privacy_flag = True
                 reward = reward + level1 * vision_p
-                self.privacy_occur_cnt = self.privacy_occur_cnt + 1
-                self.privacy_occur_cnt_level1_robot_vision = self.privacy_occur_cnt_level1_robot_vision + 1
-                print('location !=', location)
+                # self.privacy_occur_cnt = self.privacy_occur_cnt + 1
+                if flag:
+                    self.privacy_occur_cnt_level1_robot_vision = self.privacy_occur_cnt_level1_robot_vision + 1
+                print('location privacy privacy_occur_cnt_level1_robot_vision', location)
             if Robot_audio in RL_ACTION_DICT[action]:
+                privacy_flag = True
                 reward = reward + level1 * audio_p
-                self.privacy_occur_cnt = self.privacy_occur_cnt + 1
-                self.privacy_occur_cnt_level1_robot_sound = self.privacy_occur_cnt_level1_robot_sound + 1
-                print('location !=', location)
+                # self.privacy_occur_cnt = self.privacy_occur_cnt + 1
+                if flag:
+                    self.privacy_occur_cnt_level1_robot_sound = self.privacy_occur_cnt_level1_robot_sound + 1
             if WMU_audio in RL_ACTION_DICT[action]:
+                privacy_flag = True
                 reward = reward + level1 * audio_p
-                self.privacy_occur_cnt = self.privacy_occur_cnt + 1
-                self.privacy_occur_cnt_level1_wmu_sound = self.privacy_occur_cnt_level1_wmu_sound + 1
-                print('location !=', location)            
+                # self.privacy_occur_cnt = self.privacy_occur_cnt + 1
+                if flag:
+                    self.privacy_occur_cnt_level1_wmu_sound = self.privacy_occur_cnt_level1_wmu_sound + 1
+            if privacy_flag == True:
+                if flag:
+                    self.privacy_occur_cnt_level1 += 1   
         else:
             # level 2
+            privacy_flag = False
             if Robot_vision in RL_ACTION_DICT[action]:
+                privacy_flag = True
                 reward = reward + level2 * vision_p
-                self.privacy_occur_cnt = self.privacy_occur_cnt + 1
-                self.privacy_occur_cnt_level2_robot_vision = self.privacy_occur_cnt_level2_robot_vision + 1
-                print('location !=', location)
+                # self.privacy_occur_cnt = self.privacy_occur_cnt + 1
+                if flag:
+                    self.privacy_occur_cnt_level2_robot_vision = self.privacy_occur_cnt_level2_robot_vision + 1
             if Robot_audio in RL_ACTION_DICT[action]:
+                privacy_flag = True
                 reward = reward + level2 * audio_p
-                self.privacy_occur_cnt = self.privacy_occur_cnt + 1
-                self.privacy_occur_cnt_level2_robot_sound = self.privacy_occur_cnt_level2_robot_sound + 1
-                print('location !=', location)
+                # self.privacy_occur_cnt = self.privacy_occur_cnt + 1
+                if flag:
+                    self.privacy_occur_cnt_level2_robot_sound = self.privacy_occur_cnt_level2_robot_sound + 1
             if WMU_audio in RL_ACTION_DICT[action]:
+                privacy_flag = True
                 reward = reward + level1 * audio_p
-                self.privacy_occur_cnt = self.privacy_occur_cnt + 1
-                self.privacy_occur_cnt_level2_wmu_sound = self.privacy_occur_cnt_level2_wmu_sound + 1
-                print('location !=', location)   
+                # self.privacy_occur_cnt = self.privacy_occur_cnt + 1
+                if flag:
+                    self.privacy_occur_cnt_level2_wmu_sound = self.privacy_occur_cnt_level2_wmu_sound + 1
+            if privacy_flag == True:
+                if flag:
+                    self.privacy_occur_cnt_level2 += 1
 
         return reward
 
