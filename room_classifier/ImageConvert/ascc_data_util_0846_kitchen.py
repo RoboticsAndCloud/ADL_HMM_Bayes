@@ -21,17 +21,22 @@ ASCC_DATE_HOUR_TIME_FORMAT = '%Y%m%d%H%M%S'
 TRAIN_RUNNING_TIME_FORMAT = "%H:%M:%S"
 
 
-def get_timestamp_map_from_dir(dir, time_difference, copy_flag=False):
+def get_timestamp_map_from_dir(dir, time_difference, copy_flag=False, type='image'):
     path = dir
     count = 0
     prefix = ''
     map_dict = {}
     for fn in os.listdir(path):
-        if os.path.isdir(dir + '/' + fn):
+        if not os.path.isdir(dir + '/' + fn):
             print(fn)
 
             ascc_date_str = fn
-            ascc_date = ascc_date_str.replace('_rotate', '')
+            ascc_date = ascc_date_str.replace('.jpg', '')
+            if type == 'audio':
+                ascc_date = ascc_date_str.replace('_rec.wav', '')
+            elif type == 'motion':
+                ascc_date = ascc_date_str.replace('_motion.txt', '')
+
             ascc_activity_time = datetime.strptime(ascc_date, ASCC_DATE_HOUR_TIME_FORMAT)
 
             ascc_activity_timestamp = ascc_activity_time.timestamp()
@@ -52,9 +57,16 @@ def get_timestamp_map_from_dir(dir, time_difference, copy_flag=False):
 
             print("new_dir:", new_dir)
 
-            cp_cmd = 'cp -r ' + source_dir + ' ' + new_dir
+            cp_cmd = 'cp -r ' + source_dir + ' ' + new_dir 
 
             print(cp_cmd)
+            try:
+                if os.path.exists(new_dir) == False:
+                    os.mkdir(new_dir)
+            except Exception as e:
+                print(e)
+                pass
+        
             
             try:
                 if copy_flag:
@@ -68,12 +80,7 @@ def get_timestamp_map_from_dir(dir, time_difference, copy_flag=False):
             # if source_dir.find('rotate') > -1:
             #     continue
             
-            # try:
-            #     if os.path.exists(rotate_dir) == False:
-            #         os.mkdir(rotate_dir)
-            # except Exception as e:
-            #     print(e)
-            #     pass
+
 
             count = count +1
 
@@ -85,7 +92,7 @@ def get_timestamp_map_from_dir(dir, time_difference, copy_flag=False):
     return map_dict
 
 
-def get_timestamp_map(test_dir, milan_activity_date, ascc_date_str, copy_flag = False):
+def get_timestamp_map(test_dir, milan_activity_date, ascc_date_str, copy_flag = False, type = 'image'):
     # milan_activity_date = '2009-12-11 09:10:27'
     milan_activity_time = datetime.strptime(milan_activity_date, DATE_HOUR_TIME_FORMAT)
     milan_activity_time_start = milan_activity_time
@@ -100,7 +107,7 @@ def get_timestamp_map(test_dir, milan_activity_date, ascc_date_str, copy_flag = 
     print('milan timestamp:', milan_activity_time_start_time_stamp, 'ascc:', ascc_activity_timestamp,'diff:', diff)
 
     # test_dir = '/home/ascc/Desktop/white_case_0309_1211/activity_data/kitchen_activity'
-    map_dict = get_timestamp_map_from_dir(test_dir, diff, copy_flag)
+    map_dict = get_timestamp_map_from_dir(test_dir, diff, copy_flag, type)
 
     sd = sorted(map_dict.items())
     print('Mapping')
@@ -240,29 +247,30 @@ def generate_data_from_dir_kitchen_copy(dir):
 
 milan_activity_date = '2009-12-11 08:46:27'
 ascc_date_str = '20220819144013_rotate'
-base_path = '/home/ascc/Desktop/adl_0819/activity/0846_kitchen/'
-
-images = base_path +  'Image'
-
-
-get_timestamp_map(test_dir=images, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str)
-
-# Generate final data dir
-get_timestamp_map(test_dir = images,milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str, copy_flag=True)
-
-audio = base_path + 'Audio'
-
-get_timestamp_map(test_dir=audio, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str,copy_flag=False)
+ascc_date_str = '20240618032743'
+# base_path = '/home/ascc/Desktop/adl_0819/activity/0846_kitchen/'
+base_path = '/home/ascc/LF_Workspace/Bayes_model/IROS23/ADL_HMM_BAYES/Data_Apartment/Offline/Watch/'
+images = base_path +  'Image/084627_kitchen'
 
 
-# Generate final data dir
-get_timestamp_map(test_dir=audio, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str,copy_flag=True)
+# get_timestamp_map(test_dir=images, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str)
+
+# # Generate final data dir
+# get_timestamp_map(test_dir = images,milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str, copy_flag=True)
+
+audio = base_path + 'Audio/0084627_kitchen'
+
+# get_timestamp_map(test_dir=audio, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str,copy_flag=False, type = 'audio')
 
 
-motion = base_path + 'Motion'
+# # Generate final data dir
+# get_timestamp_map(test_dir=audio, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str,copy_flag=True, type = 'audio')
 
-get_timestamp_map(test_dir=motion, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str)
+
+motion = base_path + 'Motion/0084627_kitchen'
+
+get_timestamp_map(test_dir=motion, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str, copy_flag=False, type = 'motion')
 
 
-# Generate final data dir
-get_timestamp_map(test_dir=motion, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str,copy_flag=True)
+# # Generate final data dir
+get_timestamp_map(test_dir=motion, milan_activity_date=milan_activity_date, ascc_date_str=ascc_date_str,copy_flag=True, type = 'motion')
